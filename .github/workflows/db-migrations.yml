@@ -17,6 +17,11 @@ jobs:
         with:
           node-version: 22
       - run: npm install --no-audit --no-fund
+      - name: Diagnose
+        working-directory: server
+        run: |
+          npx drizzle-kit --version || true
+          node -e "import('drizzle-orm/version').then(m=>console.log('orm', m.compatibilityVersion, m.npmVersion))" || true
       - run: npm run db:generate
       - name: Commit migrations
         run: |
