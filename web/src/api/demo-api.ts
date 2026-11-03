@@ -165,7 +165,8 @@ function cannedReply(chatId: number, userText: string): string {
   const pool = demo?.replies ?? [
     '*{{char}}認真地聽著，點了點頭。*\n\n「「{{quote}}」……嗯，我記下了。再多說一些吧。」',
   ];
-  const turn = state.messages.filter((m) => m.chat_id === chatId && m.role === 'assistant').length;
+  // Count only previous replies (the greeting isn't one), so each chat starts at the first canned line.
+  const turn = state.messages.filter((m) => m.chat_id === chatId && m.role === 'user').length - 1;
   const quote = userText.length > 18 ? `${userText.slice(0, 18)}…` : userText;
   return sub(pool[turn % pool.length]!, ch.card.data.name, state.settings.user_name).replace('{{quote}}', quote);
 }
