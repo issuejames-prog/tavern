@@ -16,6 +16,7 @@
     "start": "npm run start -w server",
     "typecheck": "npm run typecheck -w shared && npm run typecheck -w server && npm run typecheck -w web",
     "test": "vitest run",
+    "test:smoke": "node tests/smoke.mjs",
     "db:generate": "npm run db:generate -w server"
   },
   "devDependencies": {
