@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { IS_DEMO } from '../../api';
+import { IS_BROWSER } from '../../api';
 import { useChats, useLogout } from '../../api/queries';
 import { t } from '../../i18n/zh-TW';
 import { plainPreview } from '../../lib/format';
@@ -90,7 +90,8 @@ function Sidebar() {
         >
           <NavIcon d={themeIcon[theme]} />
         </IconButton>
-        <span className="flex-1 text-xs text-muted">{IS_DEMO ? t.common.demoBadge : t.theme[theme]}</span>
+        <span className="flex-1 text-xs text-muted">{IS_BROWSER ? t.browser.badge : t.theme[theme]}</span>
+        {!IS_BROWSER && (
         <button
           type="button"
           className="min-h-11 rounded-lg px-3 text-sm text-muted hover:bg-surface-2 hover:text-ink"
@@ -98,6 +99,7 @@ function Sidebar() {
         >
           {t.nav.logout}
         </button>
+        )}
       </div>
     </div>
   );

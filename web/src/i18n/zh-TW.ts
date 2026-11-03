@@ -35,7 +35,6 @@ export const t = {
     copy: '複製',
     copied: '已複製',
     loadError: '資料讀取失敗',
-    demoBadge: '展示模式',
   },
   login: {
     title: '歡迎回來',
@@ -43,7 +42,6 @@ export const t = {
     password: '通關密語',
     submit: '推門進去',
     submitting: '開門中…',
-    demoHint: '這是展示版：輸入任何文字都能進入，回覆為預錄內容，不會呼叫真實模型。',
   },
   home: {
     greeting: {
@@ -151,6 +149,32 @@ export const t = {
   worlds: {
     title: '世界書',
     soon: '世界書會在階段二加入：關鍵字觸發、優先度與 Token 預算。',
+  },
+  browser: {
+    badge: '瀏覽器模式',
+    keyLabel: 'OpenRouter API 金鑰',
+    keyPlaceholder: 'sk-or-v1-…',
+    keyHint: '金鑰只存在這個瀏覽器（localStorage），只會送到 OpenRouter，不會上傳到 GitHub 或任何其他地方。建議在 OpenRouter 建立一把專用金鑰並設定額度上限。',
+    keySaved: '已儲存在這個瀏覽器',
+    keyMissing: '尚未輸入金鑰',
+    keyShow: '顯示',
+    keyHide: '隱藏',
+    keyClear: '清除金鑰',
+    keyGet: '到 OpenRouter 取得金鑰',
+    goToSettings: '前往設定輸入金鑰',
+    dataNote: '對話與角色存在這個瀏覽器裡。清除瀏覽器資料、換瀏覽器或換電腦都會看不到原本的內容。',
+    welcomeTitle: '先放好你的鑰匙',
+    welcomeBody: '輸入你的 OpenRouter 金鑰，就能開始跟角色聊天。金鑰只存在這個瀏覽器。',
+    errors: {
+      missingKey: '還沒有輸入 OpenRouter 金鑰，請先到「設定」頁填入。',
+      dailyLimit: (n: number) => `今日生成次數已達上限（${n} 次），明天再來吧`,
+      auth: 'OpenRouter 拒絕了這把金鑰，請到「設定」確認金鑰是否正確或已被撤銷。',
+      credits: 'OpenRouter 帳戶額度不足，請到 openrouter.ai 儲值或調整金鑰的額度上限。',
+      rateLimit: '請求太頻繁，被 OpenRouter 暫時限制了，稍等一下再試。',
+      network: '連不到 OpenRouter，請檢查網路連線。',
+      badRequest: (detail: string) => `模型設定可能有誤（例如模型 ID 不存在）：${detail}`,
+      generic: (detail: string) => `模型服務回傳錯誤${detail ? `：${detail}` : ''}`,
+    },
   },
   errors: {
     network: '連不到伺服器，請確認後端是否啟動',

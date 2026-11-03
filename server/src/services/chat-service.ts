@@ -1,12 +1,11 @@
 import { eq } from 'drizzle-orm';
-import type { ChatMessage, MessageRecord, StreamEvent, TokenUsage } from '@tavern/shared';
+import { assemblePrompt, type ChatMessage, type MessageRecord, type StreamEvent, type TokenUsage } from '@tavern/shared';
 import { env } from '../config/env';
 import { db } from '../db/client';
 import { chats, messages } from '../db/schema';
 import { AppError } from '../lib/errors';
 import { createProvider, ProviderError } from '../providers';
 import { parseStoredCard } from './character-card';
-import { assemblePrompt } from './prompt-assembler';
 import { getAppSettings, getCharacterRow, getChatDetail, getDefaultProfile, toMessage, touchChat } from './repo';
 import { countTokens } from './tokenizer';
 import { isOverDailyLimit, recordUsage } from './usage';

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { emptyCardData, type ChatMessage } from '@tavern/shared';
+import type { ChatMessage } from './api';
+import { emptyCardData } from './card';
 import { assemblePrompt, type AssembleInput } from './prompt-assembler';
 
 // 1 token per character keeps the budget math easy to reason about.

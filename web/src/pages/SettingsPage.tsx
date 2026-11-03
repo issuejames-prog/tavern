@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import type { ModelProfile } from '@tavern/shared';
-import { IS_DEMO } from '../api';
+import { IS_BROWSER } from '../api';
 import { useSettings, useUpdateProfile, useUpdateSettings } from '../api/queries';
 import { Button, ErrorNote, Field, PageHeader, Spinner } from '../components/common/ui';
 import { t } from '../i18n/zh-TW';
@@ -26,6 +26,65 @@ function SaveRow({ pending, saved, error }: { pending: boolean; saved: boolean; 
         {saved && !pending && <span className="text-sm text-accent">{t.common.saved}</span>}
       </div>
     </div>
+  );
+}
+
+function KeyStatus({ present, label }: { present: boolean; label: string }) {
+  return (
+    <p className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs ${present ? 'bg-accent-soft text-accent' : 'bg-danger-soft text-danger'}`}>
+      <span className="size-1.5 rounded-full bg-current" />
+      {label}
+    </p>
+  );
+}
+
+/** Browser mode: the viewer's own OpenRouter key, kept only in this browser. */
+function BrowserKeyForm({ profile }: { profile: ModelProfile }) {
+  const update = useUpdateProfile();
+  const [key, setKey] = useState('');
+  const [visible, setVisible] = useState(false);
+
+  const save = (value: string) => update.mutate({ id: profile.id, input: { api_key: value } }, { onSuccess: () => setKey('') });
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (key.trim()) save(key);
+      }}
+      className="space-y-4"
+    >
+      <KeyStatus present={profile.key_present} label={profile.key_present ? t.browser.keySaved : t.browser.keyMissing} />
+      <div className="flex gap-2">
+        <div className="flex-1">
+          <Field
+            label={t.browser.keyLabel}
+            type={visible ? 'text' : 'password'}
+            value={key}
+            onChange={setKey}
+            placeholder={profile.key_present ? '••••••••••••' : t.browser.keyPlaceholder}
+          />
+        </div>
+        <Button variant="quiet" className="mt-7" onClick={() => setVisible((v) => !v)}>
+          {visible ? t.browser.keyHide : t.browser.keyShow}
+        </Button>
+      </div>
+      <p className="text-xs leading-relaxed text-muted">{t.browser.keyHint}</p>
+      {update.error && <ErrorNote message={update.error.message} />}
+      <div className="flex flex-wrap items-center gap-3">
+        <Button type="submit" variant="primary" disabled={update.isPending || !key.trim()}>
+          {t.common.save}
+        </Button>
+        {profile.key_present && (
+          <Button variant="danger" onClick={() => save('')}>
+            {t.browser.keyClear}
+          </Button>
+        )}
+        <a href="https://openrouter.ai/keys" target="_blank" rel="noreferrer" className="text-sm text-accent hover:underline">
+          {t.browser.keyGet} ↗
+        </a>
+      </div>
+    </form>
   );
 }
 
@@ -78,15 +137,12 @@ function ProfileForm({ profile }: { profile: ModelProfile }) {
         <div className="sm:col-span-2">
           <Field label={t.settings.model} hint={t.settings.modelHint} value={f.model} onChange={set('model')} />
         </div>
-        <div className="space-y-2 sm:col-span-2">
-          <Field label={t.settings.keyEnv} hint={t.settings.keyEnvHint} value={f.key_env} onChange={set('key_env')} />
-          {!IS_DEMO && (
-            <p className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs ${profile.key_present ? 'bg-accent-soft text-accent' : 'bg-danger-soft text-danger'}`}>
-              <span className="size-1.5 rounded-full bg-current" />
-              {profile.key_present ? t.settings.keyPresent : t.settings.keyMissing}
-            </p>
-          )}
-        </div>
+        {!IS_BROWSER && (
+          <div className="space-y-2 sm:col-span-2">
+            <Field label={t.settings.keyEnv} hint={t.settings.keyEnvHint} value={f.key_env} onChange={set('key_env')} />
+            <KeyStatus present={profile.key_present} label={profile.key_present ? t.settings.keyPresent : t.settings.keyMissing} />
+          </div>
+        )}
         <Field label={t.settings.temperature} hint={t.settings.temperatureHint} value={f.temperature} onChange={set('temperature')} inputMode="decimal" />
         <Field label={t.settings.topP} value={f.top_p} onChange={set('top_p')} inputMode="decimal" />
         <Field label={t.settings.maxTokens} value={f.max_tokens} onChange={set('max_tokens')} inputMode="numeric" />
@@ -133,6 +189,11 @@ export function SettingsPage() {
 
         {settings.data && (
           <>
+            {IS_BROWSER && profile && (
+              <Card title={t.browser.keyLabel}>
+                <BrowserKeyForm profile={profile} />
+              </Card>
+            )}
             <Card title={t.settings.sections.profile}>
               <ProfileSettings userName={settings.data.settings.user_name} systemPrompt={settings.data.settings.system_prompt} />
             </Card>
@@ -143,6 +204,7 @@ export function SettingsPage() {
             )}
             <Card title={t.settings.sections.usage}>
               <p className="text-muted">{t.settings.usageText(settings.data.usage_today.requests, settings.data.usage_today.limit)}</p>
+              {IS_BROWSER && <p className="mt-3 text-xs leading-relaxed text-muted">{t.browser.dataNote}</p>}
             </Card>
           </>
         )}

@@ -46,7 +46,7 @@ async function* sseEvents(body: ReadableStream<Uint8Array>): AsyncGenerator<Stre
 }
 
 export const httpApi: TavernApi = {
-  isDemo: false,
+  mode: 'server',
   me: () => request('GET', '/auth/me'),
   login: async (password) => {
     await request('POST', '/auth/login', { password });

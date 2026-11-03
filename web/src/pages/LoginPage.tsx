@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { IS_DEMO } from '../api';
 import { useLogin, useMe } from '../api/queries';
 import { Button, ErrorNote, Field, MugIcon } from '../components/common/ui';
 import { t } from '../i18n/zh-TW';
@@ -37,7 +36,6 @@ export function LoginPage() {
           </Button>
         </div>
 
-        {IS_DEMO && <p className="mt-6 rounded-lg bg-accent-soft px-4 py-3 text-xs leading-relaxed text-muted">{t.login.demoHint}</p>}
       </form>
     </div>
   );

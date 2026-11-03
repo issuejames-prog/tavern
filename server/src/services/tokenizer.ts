@@ -1,10 +1,7 @@
 import { encode } from 'gpt-tokenizer';
-import type { ChatMessage } from '@tavern/shared';
+import { MESSAGE_OVERHEAD, type ChatMessage, type TokenCounter } from '@tavern/shared';
 
-export type TokenCounter = (text: string) => number;
-
-// Per-message framing overhead in the chat format (role markers etc.).
-export const MESSAGE_OVERHEAD = 4;
+export type { TokenCounter };
 
 /**
  * An estimate: OpenRouter models use many tokenizers, so this is only for

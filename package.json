@@ -12,7 +12,7 @@
   "scripts": {
     "dev": "concurrently -n server,web -c green,cyan \"npm run dev -w server\" \"npm run dev -w web\"",
     "build": "npm run build -w web",
-    "build:demo": "npm run build:demo -w web",
+    "build:pages": "npm run build:pages -w web",
     "start": "npm run start -w server",
     "typecheck": "npm run typecheck -w shared && npm run typecheck -w server && npm run typecheck -w web",
     "test": "vitest run",

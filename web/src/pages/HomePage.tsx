@@ -1,7 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom';
+import { IS_BROWSER } from '../api';
 import { useCharacters, useChats, useCreateChat, useSettings } from '../api/queries';
 import { Avatar } from '../components/common/Avatar';
-import { Button, EmptyState, ErrorNote, Spinner } from '../components/common/ui';
+import { Button, EmptyState, ErrorNote, MugIcon, Spinner } from '../components/common/ui';
 import { t } from '../i18n/zh-TW';
 import { plainPreview, relativeTime } from '../lib/format';
 
@@ -24,6 +25,7 @@ export function HomePage() {
     createChat.mutate(characterId, { onSuccess: (chat) => navigate(`/chat/${chat.id}`) });
 
   const userName = settings.data?.settings.user_name;
+  const needsKey = IS_BROWSER && settings.data?.profiles[0]?.key_present === false;
 
   return (
     <div className="scroll-soft h-full overflow-y-auto">
@@ -35,6 +37,21 @@ export function HomePage() {
           </h1>
           <p className="mt-3 text-lg text-muted">{t.home.lead}</p>
         </header>
+
+        {needsKey && (
+          <section className="rise mb-12 flex flex-wrap items-center gap-5 rounded-lg border border-accent/40 bg-accent-soft p-6">
+            <span className="flex size-12 items-center justify-center rounded-full bg-surface text-accent">
+              <MugIcon className="size-8" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <h2 className="font-serif text-lg font-semibold">{t.browser.welcomeTitle}</h2>
+              <p className="mt-1 text-sm leading-relaxed text-muted">{t.browser.welcomeBody}</p>
+            </div>
+            <Link to="/settings">
+              <Button variant="primary">{t.browser.goToSettings}</Button>
+            </Link>
+          </section>
+        )}
 
         {chats.data && chats.data.length > 0 && (
           <section className="mb-14">

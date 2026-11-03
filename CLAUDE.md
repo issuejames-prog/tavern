@@ -57,7 +57,9 @@
 - 角色庫列表與基本編輯器（欄位編輯，未知欄位保留）；PNG／JSON 匯入屬階段二，尚未實作。
 - 設定頁：暱稱、系統指令、模型設定（只存金鑰的環境變數名稱）、今日用量、主題與閱讀模式。
 - 每日生成次數上限（`DAILY_REQUEST_LIMIT`）。
-- GitHub Pages 展示版：`npm run build:demo`（Vite 的 `demo` mode）建置時以 `web/src/api/demo-api.ts` 取代 HTTP 後端，在瀏覽器內模擬，回覆為預錄文字，**不呼叫任何模型、不需要金鑰**。
+- **兩種執行模式**（決策見 `docs/decisions/2026-11-03-browser-mode.md`）：
+  - **瀏覽器模式**（GitHub Pages，`npm run build:pages`，Vite mode `browser`）：`web/src/api/browser-api.ts` 在瀏覽器內執行整個對話流程，使用者在設定頁輸入自己的 OpenRouter 金鑰，直接呼叫 OpenRouter；資料存在 localStorage。不需登入。
+  - **伺服器模式**（自架，`npm run dev`／`npm start`）：Hono + SQLite 後端，金鑰在 `.env`，單一密碼登入。
 
 ---
 
@@ -78,7 +80,7 @@
    └──► 外部：使用者的個人 LLM API（OpenRouter）
 ```
 
-**鐵則**：API 金鑰只存在後端，永遠不進前端程式碼、不進資料庫明文、不進版本控制。
+**鐵則**：API 金鑰永遠不進程式碼、不進資料庫明文、不進版本控制（**包括 `.env` 不得上傳到 GitHub**）。伺服器模式的金鑰只存在後端；瀏覽器模式是唯一例外——金鑰只存在使用者自己瀏覽器的 localStorage，只送往模型供應商，並以 CSP 限制連線目標。
 
 ### 技術選型（預設）
 
@@ -87,11 +89,11 @@
 | 前端 | React + Vite + TypeScript、Tailwind CSS v4、Zustand（介面狀態）、TanStack Query（伺服器資料）、React Router |
 | 後端 | Node.js 22 / 26 + TypeScript，Hono（`@hono/node-server`），以 `tsx` 執行 |
 | 串流 | SSE（Server-Sent Events）；前端以 fetch 讀取（因為需要 POST） |
-| 資料庫 | SQLite（better-sqlite3）+ Drizzle ORM |
+| 資料庫 | 伺服器模式：SQLite（better-sqlite3）+ Drizzle ORM；瀏覽器模式：localStorage |
 | 檔案 | 本機資料夾（PNG 原檔、頭像） |
 | PNG 處理 | `png-chunks-extract`、`png-chunk-text` 這類套件，讀寫 tEXt chunk（階段二） |
 | Token 估算 | `gpt-tokenizer`（僅估算預算），實際用量以供應商回報為準 |
-| CI／展示 | GitHub Actions（型別檢查、測試、建置）、GitHub Pages（展示版） |
+| CI／發布 | GitHub Actions（型別檢查、測試、建置）、GitHub Pages（瀏覽器模式） |
 | 部署 | Docker Compose + Caddy（HTTPS）；遠端存取優先 Tailscale 或 Cloudflare Tunnel |
 
 > 新增套件前請見第 8 節規則。
@@ -100,7 +102,7 @@
 
 ## 4. 一次對話的流程（實作時必須遵守的順序）
 
-實作位置：`server/src/services/chat-service.ts`。
+實作位置：伺服器模式 `server/src/services/chat-service.ts`；瀏覽器模式 `web/src/api/browser-api.ts` 的 `generate`。兩者共用 `shared/src/prompt-assembler.ts`，修改流程時兩邊要一起改。
 
 1. 使用者送出訊息 → **先把使用者訊息存進資料庫**（API 失敗時訊息不能遺失）。
 2. 讀取角色卡內容與最近聊天歷史。
@@ -169,7 +171,7 @@
 | `/worlds/:id` | 世界書編輯 | 階段二 |
 | `/settings` | 設定 | 模型設定、生成參數、Token 預算、外觀；（之後）備份匯出 |
 
-展示版（GitHub Pages）使用 hash 路由（`/#/chat/1`），一般版使用一般路由。
+瀏覽器模式（GitHub Pages）使用 hash 路由（`/#/chat/1`）且不顯示登入頁；伺服器模式使用一般路由。
 
 ### 版面骨架
 
@@ -216,7 +218,7 @@
 │     ├─ components/       # 共用元件，依功能分子資料夾（layout/、chat/、common/）
 │     ├─ hooks/            # useChatStream.ts 等
 │     ├─ stores/           # Zustand store
-│     ├─ api/              # TavernApi 介面、http-api.ts、demo-api.ts、TanStack Query hooks
+│     ├─ api/              # TavernApi 介面、http-api.ts（伺服器模式）、browser-api.ts + browser-llm.ts（瀏覽器模式）、queries.ts
 │     ├─ lib/              # 純函式工具（格式化）
 │     ├─ i18n/             # 介面文字（zh-TW.ts）
 │     └─ styles/           # design tokens 與全域樣式
@@ -224,7 +226,6 @@
 │  └─ src/
 │     ├─ routes/           # 路由（auth.ts、chats.ts、characters.ts、settings.ts）
 │     ├─ services/         # 業務邏輯
-│     │  ├─ prompt-assembler.ts
 │     │  ├─ chat-service.ts
 │     │  ├─ character-card.ts
 │     │  ├─ repo.ts        # 資料存取與型別轉換
@@ -235,7 +236,7 @@
 │     ├─ lib/              # auth、errors
 │     ├─ db/               # schema、migrations、連線、seed
 │     └─ config/           # 環境變數讀取與驗證
-├─ shared/                 # 前後端共用型別（卡片格式、API 型別）
+├─ shared/                 # 前後端共用：型別、prompt-assembler.ts、text.ts（變數替換、Token 估算）
 ├─ data/                   # 執行期資料（**不進版本控制**）
 │  ├─ app.sqlite
 │  ├─ avatars/
@@ -245,7 +246,7 @@
 └─ .env.example            # 環境變數範本（只放變數名稱，不放真實值）
 ```
 
-單元測試與原檔放在一起（`prompt-assembler.test.ts` 與 `prompt-assembler.ts` 同資料夾）。
+單元測試與原檔放在一起（`shared/src/prompt-assembler.test.ts` 與 `prompt-assembler.ts` 同資料夾）。
 
 ### 命名規則
 
@@ -267,9 +268,9 @@
 ### 放置原則
 
 - 前後端共用的型別一律放 `shared/`，不要在兩邊各寫一份。
-- 供應商相關的差異**只能**出現在 `server/providers/`，其他地方不得出現特定供應商的欄位名稱。
+- 供應商相關的差異**只能**出現在 `server/providers/`（伺服器模式）與 `web/src/api/browser-llm.ts`（瀏覽器模式），其他地方不得出現特定供應商的欄位名稱。
 - 執行期資料與使用者上傳的檔案只放 `data/`；程式不得把它們寫到其他位置。
-- 展示版的假資料與預錄回覆只放 `web/src/api/demo-*.ts`，其他元件不得依賴展示模式的細節（只能讀 `IS_DEMO` 決定是否顯示提示）。
+- 瀏覽器模式的資料存取只放 `web/src/api/browser-*.ts`；元件只能讀 `IS_BROWSER` 決定顯示哪些介面（例如金鑰輸入），不得自行讀寫 localStorage 的資料。
 - 單一檔案過長（約 300 行以上）時，優先拆成同資料夾下的小模組，而不是繼續堆疊。
 
 ---
@@ -351,7 +352,7 @@ interface LLMProvider {
 ### 9.2 絕對不可以做的事
 
 - **不得**把 API 金鑰、密碼或任何機密寫進程式碼、設定範本、日誌、commit、測試快照或回傳給前端的內容。
-- **不得**在前端直接呼叫 LLM API；一律經過後端。展示版也不得呼叫任何模型。
+- **不得**在前端直接呼叫 LLM API，瀏覽器模式（`browser-llm.ts`）除外；瀏覽器模式不得把金鑰送到模型供應商以外的地方，也不得放寬 CSP 的 `connect-src`。
 - **不得**丟失使用者資料：刪除對話、角色、世界書、覆寫角色卡前必須有確認機制；破壞性操作要先取得使用者同意。
 - **不得**在匯入角色卡或世界書時丟棄未知欄位。
 - **不得**在 `server/providers/` 以外寫死特定供應商的行為。
@@ -418,5 +419,7 @@ interface LLMProvider {
 - [x] 使用者的 LLM API：**OpenRouter**（OpenAI 相容格式），第一個實作為 `server/src/providers/openrouter.ts`。
 - [ ] 部署位置：自己的電腦、NAS、還是雲端主機？（目前以「自己的電腦，本機執行」為預設）
 - [x] 視覺風格：輕鬆悠閒、以電腦端為主（見第 5 節）。
-- [x] 專案存放的 repo：`issuejames-prog/tavern`（GitHub），展示版在 GitHub Pages：<https://issuejames-prog.github.io/tavern/>。
+- [x] 專案存放的 repo：`issuejames-prog/tavern`（GitHub），瀏覽器模式在 GitHub Pages：<https://issuejames-prog.github.io/tavern/>（需在 repo 的 Settings → Pages 選 `gh-pages` 分支）。
+- [x] 發布方式：以 GitHub Pages 瀏覽器模式為主（2026-11-03 使用者選擇），伺服器模式保留。
+- [ ] 瀏覽器模式的資料備份匯出（目前只存在單一瀏覽器）。
 - [ ] 預設模型 ID：目前為 `deepseek/deepseek-chat-v3-0324`，使用者可在設定頁更改。

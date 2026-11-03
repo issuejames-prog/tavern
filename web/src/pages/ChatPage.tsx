@@ -100,6 +100,11 @@ export function ChatPage() {
             <div>
               <p className="mb-2 text-sm font-medium text-danger">{t.chat.errorTitle}</p>
               <ErrorNote message={stream.error.message} />
+              {['MISSING_API_KEY', 'PROVIDER_AUTH', 'PROVIDER_BAD_REQUEST'].includes(stream.error.code) && (
+                <Link to="/settings" className="mt-3 inline-block text-sm text-accent hover:underline">
+                  {t.nav.settings} →
+                </Link>
+              )}
             </div>
           )}
         </div>

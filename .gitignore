@@ -10,4 +10,4 @@ data/*
 *.log
 .DS_Store
 coverage/
-dist-demo/
+dist-pages/

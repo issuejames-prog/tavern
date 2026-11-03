@@ -21,6 +21,8 @@ jobs:
         run: npm test
       - name: Build web
         run: npm run build
+      - name: Build GitHub Pages (browser mode)
+        run: npm run build:pages
       - name: End-to-end smoke test (fake model endpoint)
         run: node tests/smoke.mjs
       - name: Migrations match schema

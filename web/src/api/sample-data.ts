@@ -1,8 +1,8 @@
 import { emptyCardData, type CharacterCardV2 } from '@tavern/shared';
 
-// Self-made sample content for the GitHub Pages demo. Not sent to any model.
+// Self-made sample characters seeded into a fresh browser-mode install.
 
-export const DEMO_CARDS: { card: CharacterCardV2; color: string; replies: string[] }[] = [
+export const SAMPLE_CARDS: { card: CharacterCardV2; color: string }[] = [
   {
     color: 'clay',
     card: {
@@ -20,11 +20,6 @@ export const DEMO_CARDS: { card: CharacterCardV2; color: string; replies: string
         creator_notes: '內建範例角色。',
       },
     },
-    replies: [
-      '*{{char}}托著下巴聽你說完，眼睛亮了起來。*\n\n「「{{quote}}」……聽起來真不簡單呢。」*她轉身從架上拿下一只厚陶杯，倒進冒著熱氣的蘋果酒。*「這杯算我的，故事換酒，很公平吧？」\n\n*麥芽伸了個懶腰，跳上你旁邊的高腳椅。*',
-      '「哎呀，」*{{char}}笑出聲，用鉛筆敲了敲吧台。*「你知道為什麼酒館的椅子都不會累嗎？——因為它們一直都坐著呀。」\n\n*她自己先笑得肩膀發抖，然後才正色。*「好啦，說真的，你剛剛說的那件事，後來呢？」',
-      '*窗外的雨聲漸漸小了。{{char}}把南瓜派切成兩塊，一塊推到你面前。*\n\n「慢慢吃，不趕時間。」*她靠在吧台上，望著窗外的街燈一盞盞亮起。*「這裡的好處就是——什麼事都可以等明天再煩惱。」',
-    ],
   },
   {
     color: 'sky',
@@ -43,10 +38,5 @@ export const DEMO_CARDS: { card: CharacterCardV2; color: string; replies: string
         creator_notes: '內建範例角色。',
       },
     },
-    replies: [
-      '*{{char}}在手稿邊緣記下幾個字。*\n\n「「{{quote}}」——好句子。故事就像麵包，」*他慢慢地說，*「要讓它發酵一會兒，才會有香氣。你願意多說一點嗎？」',
-      '*他撥了撥琴弦，一段輕快的旋律在燭光裡打轉。*\n\n「我曾在北方的港口聽過類似的傳說：一位旅人帶著空瓶子出海，回來時瓶子裡裝滿了星光。」*{{char}}微笑。*「後來的事，就由你來寫吧。」',
-      '*燭火輕輕晃動，{{char}}闔上手中的書。*\n\n「不急著寫結局。」*他把一張乾淨的羊皮紙推到你面前。*「好的故事都是在閒聊裡慢慢長出來的——就像今晚這樣。」',
-    ],
   },
 ];

@@ -1,6 +1,6 @@
-import type { CharacterCardV2Data, ChatMessage } from '@tavern/shared';
-import { splitExamples, substituteVars } from './character-card';
-import { MESSAGE_OVERHEAD, type TokenCounter } from './tokenizer';
+import type { ChatMessage } from './api';
+import type { CharacterCardV2Data } from './card';
+import { MESSAGE_OVERHEAD, splitExamples, substituteVars, type TokenCounter } from './text';
 
 export interface WorldSnippet {
   content: string;

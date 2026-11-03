@@ -23,14 +23,17 @@ export interface ProfileInput {
   key_env?: string;
   params?: Partial<ModelProfile['params']>;
   context_tokens?: number;
+  /** Browser mode only: the viewer's own key, kept in this browser. Empty string clears it. */
+  api_key?: string;
 }
 
 /**
  * Everything the UI needs from a backend. Two implementations:
- * the real HTTP server, and an in-browser demo used for the GitHub Pages preview.
+ * the self-hosted HTTP server, and browser mode (GitHub Pages) where the
+ * backend logic runs in the tab and calls OpenRouter with the viewer's own key.
  */
 export interface TavernApi {
-  readonly isDemo: boolean;
+  readonly mode: 'server' | 'browser';
   me(): Promise<{ authenticated: boolean }>;
   login(password: string): Promise<void>;
   logout(): Promise<void>;

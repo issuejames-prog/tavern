@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { BrowserRouter, HashRouter, Navigate, Route, Routes } from 'react-router-dom';
-import { IS_DEMO } from './api';
+import { IS_BROWSER } from './api';
 import { useMe } from './api/queries';
 import { AppShell } from './components/layout/AppShell';
 import { ErrorNote, Spinner } from './components/common/ui';
@@ -25,8 +25,8 @@ function RequireAuth({ children }: { children: ReactNode }) {
   return me.data.authenticated ? children : <Navigate to="/login" replace />;
 }
 
-// GitHub Pages can't rewrite unknown paths to index.html, so the demo uses hash URLs.
-const Router = IS_DEMO ? HashRouter : BrowserRouter;
+// GitHub Pages can't rewrite unknown paths to index.html, so browser mode uses hash URLs.
+const Router = IS_BROWSER ? HashRouter : BrowserRouter;
 
 export function App() {
   return (
