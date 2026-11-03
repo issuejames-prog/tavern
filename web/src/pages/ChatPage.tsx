@@ -53,7 +53,7 @@ export function ChatPage() {
 
   return (
     <div className={`flex h-full flex-col ${readingSerif ? 'reading-serif' : ''}`}>
-      <header className="flex items-center gap-3 border-b border-line bg-bg/80 px-4 py-3 backdrop-blur md:px-8">
+      <header className="relative z-20 flex items-center gap-3 border-b border-line bg-bg/80 px-4 py-3 backdrop-blur md:px-8">
         <Avatar name={data.character_name} color={data.avatar_color} src={data.avatar_url} size={40} />
         <div className="min-w-0 flex-1">
           <h1 className="truncate font-serif text-lg font-semibold">{data.character_name}</h1>

@@ -2,7 +2,7 @@ import type { ChatMessage, GenParams, ModelProfile, TokenUsage } from '@tavern/s
 import { t } from '../i18n/zh-TW';
 
 /*
- * Model adapter (CLAUDE.md §4.4): messages in, text stream out, usage reported.
+ * Model adapter (CLAUDE.md §4.5): messages in, text stream out, usage reported.
  * OpenRouter allows direct browser calls (CORS), so the request goes straight
  * from this tab to the provider using the viewer's own key.
  */

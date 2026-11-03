@@ -1,4 +1,4 @@
-// Every UI string lives here or in ./zh-TW/ (CLAUDE.md §4.7) so the app can be translated later.
+// Every UI string lives here or in ./zh-TW/ (CLAUDE.md §4.8) so the app can be translated later.
 import { editor } from './zh-TW/editor';
 import { worlds } from './zh-TW/worlds';
 

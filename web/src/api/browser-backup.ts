@@ -27,7 +27,7 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 
 export const backupApi: Pick<TavernApi, 'exportBackup' | 'importBackup'> = {
   exportBackup: ready(async () => {
-    // Avatars travel as data URLs; the API key is deliberately NOT included (CLAUDE.md §4.5).
+    // Avatars travel as data URLs; the API key is deliberately NOT included (CLAUDE.md §4.6).
     const avatars: Record<string, string> = {};
     for (const c of state.characters.filter((x) => x.has_avatar)) {
       const blob = await getBlob(avatarKey(c.id));

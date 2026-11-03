@@ -14,7 +14,7 @@ import {
 
 /*
  * Built-in example content (the only place outside i18n allowed to hold Chinese text,
- * CLAUDE.md §4.7). Everything here is written the way CLAUDE.md §4.2 / §4.3 describe,
+ * CLAUDE.md §4.8). Everything here is written the way CLAUDE.md §4.2／§4.3 describe,
  * so it doubles as a reference for writing cards and world books.
  */
 
@@ -118,7 +118,8 @@ const FANTASY_ENTRIES: EntrySpec[] = [
   },
   {
     title: '莉瑟爾被逐出騎士團的真相',
-    keys: ['斷劍', '被逐出', '逐出', '為什麼離開', '灰麥村'],
+    // 避免用「斷劍」：會誤中酒館名「斷劍酒館」。關鍵字要具體、不和地名人名重疊。
+    keys: ['劍怎麼斷', '斷掉的劍', '被逐出', '逐出騎士團', '為什麼離開', '灰麥村'],
     content:
       '三年前，莉瑟爾的上司奉某位公爵之命，要燒毀拒絕繳稅的灰麥村。莉瑟爾當眾拒絕並折斷了自己的劍，掩護村民撤離。騎士團以「抗命」為由將她除名，那位公爵的名字她從不說出口。',
     order: 85,

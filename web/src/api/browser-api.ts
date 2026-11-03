@@ -20,7 +20,7 @@ import { fantasyExample } from './sample-data';
 import { ApiRequestError, type ProfileInput, type TavernApi } from './types';
 
 /*
- * The app's whole "backend", running in the browser (CLAUDE.md §1, §4.6).
+ * The app's whole "backend", running in the browser (CLAUDE.md §1, §4.7).
  * Characters, world books and backups live in their own modules; chats and settings here.
  */
 

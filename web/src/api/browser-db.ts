@@ -90,7 +90,7 @@ export async function isPersistent(): Promise<boolean> {
 }
 
 /**
- * Older shapes → current shape (CLAUDE.md §4.5). Each step only adds or moves
+ * Older shapes → current shape (CLAUDE.md §4.6). Each step only adds or moves
  * fields, so nothing the user wrote is lost.
  *   v1 (stage 1, localStorage) → v2: world books, avatars, character ↔ world link
  *   v2 → v3: per-chat author's note, user persona, global world activation settings;
