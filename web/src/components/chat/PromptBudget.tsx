@@ -10,8 +10,8 @@ export function PromptBudget({ info }: { info: PromptInfo }) {
       <summary
         className={`flex min-h-9 cursor-pointer list-none items-center gap-2 rounded-lg px-3 text-xs transition-colors hover:bg-surface-2 ${info.over_budget ? 'text-danger' : 'text-muted'}`}
       >
-        <span className="h-1.5 w-14 overflow-hidden rounded-full bg-surface-2" aria-hidden>
-          <span className={`block h-full rounded-full ${info.over_budget ? 'bg-danger' : 'bg-accent'}`} style={{ width: `${ratio * 100}%` }} />
+        <span className="h-1.5 w-14 overflow-hidden rounded-full bg-line" aria-hidden>
+          <span className={`block h-full rounded-full ${info.over_budget ? 'bg-danger' : 'bg-accent'}`} style={{ width: `${Math.max(4, ratio * 100)}%` }} />
         </span>
         <span>{t.chat.budget(info.tokens, info.budget)}</span>
         {info.world_included.length > 0 && <span className="hidden lg:inline">· {t.chat.budgetWorld(info.world_included.length)}</span>}

@@ -139,10 +139,10 @@ export function WorldEditPage() {
                   onClick={() => setSelected(e.id)}
                   className={`w-full rounded-lg px-3 py-2.5 text-left transition-colors ${e.id === selected ? 'bg-accent-soft' : 'hover:bg-surface-2'}`}
                 >
-                  <span className={`flex items-center gap-2 text-sm font-medium ${e.enabled === false ? 'text-muted line-through' : ''}`}>
-                    <span className="truncate">{entryLabel(e)}</span>
+                  <span className={`flex items-center gap-2 text-sm font-medium ${e.enabled === false ? 'text-muted' : ''}`}>
+                    <span className={`truncate ${e.enabled === false ? 'line-through' : ''}`}>{entryLabel(e)}</span>
                     {e.constant && <span className="shrink-0 rounded bg-surface-2 px-1.5 text-[11px] text-muted">{t.worlds.entry.constantTag}</span>}
-                    {e.enabled === false && <span className="shrink-0 text-[11px] text-muted no-underline">{t.worlds.entry.disabledTag}</span>}
+                    {e.enabled === false && <span className="shrink-0 rounded bg-surface-2 px-1.5 text-[11px] text-muted">{t.worlds.entry.disabledTag}</span>}
                   </span>
                   <span className="block truncate text-xs text-muted">{e.keys.join('、') || '—'}</span>
                 </button>
