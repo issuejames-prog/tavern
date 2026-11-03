@@ -1,6 +1,6 @@
 // End-to-end smoke test: boots the real server against a fake OpenAI-compatible
 // endpoint, then logs in, starts a chat and streams one reply.
-// Usage: node tests/smoke.mjs   (expects `npm run build` to have run first)
+// Usage: npm run test:smoke   (expects `npm run build` to have run first)
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
 import { mkdtempSync } from 'node:fs';
@@ -27,7 +27,8 @@ const mock = createServer((req, res) => {
 });
 await new Promise((r) => mock.listen(MOCK_PORT, '127.0.0.1', r));
 
-const server = spawn('npm', ['start'], {
+const server = spawn(process.execPath, ['--import', 'tsx', 'src/index.ts'], {
+  cwd: new URL('../server/', import.meta.url),
   env: {
     ...process.env,
     PORT: String(APP_PORT),
@@ -37,15 +38,8 @@ const server = spawn('npm', ['start'], {
     DATA_DIR: mkdtempSync(join(tmpdir(), 'tavern-smoke-')),
   },
   stdio: ['ignore', 'inherit', 'inherit'],
-  detached: true, // own process group, so npm → tsx → node all stop together
 });
-const stopServer = () => {
-  try {
-    process.kill(-server.pid, 'SIGTERM');
-  } catch {
-    // already gone
-  }
-};
+const stopServer = () => server.kill();
 
 function fail(msg) {
   console.error(`✗ ${msg}`);

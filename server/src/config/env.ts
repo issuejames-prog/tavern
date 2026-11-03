@@ -30,7 +30,6 @@ export const env = {
   port: int('PORT', 8787),
   dailyRequestLimit: int('DAILY_REQUEST_LIMIT', 300),
   debugMode: process.env.DEBUG_MODE === '1',
-  isProduction: process.env.NODE_ENV === 'production',
   // Only enable behind HTTPS (Caddy / Tunnel); plain-http localhost would drop the cookie.
   cookieSecure: process.env.COOKIE_SECURE === '1',
   dataDir: resolve(ROOT_DIR, process.env.DATA_DIR ?? 'data'),

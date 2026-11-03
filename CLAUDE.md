@@ -57,7 +57,7 @@
 - 角色庫列表與基本編輯器（欄位編輯，未知欄位保留）；PNG／JSON 匯入屬階段二，尚未實作。
 - 設定頁：暱稱、系統指令、模型設定（只存金鑰的環境變數名稱）、今日用量、主題與閱讀模式。
 - 每日生成次數上限（`DAILY_REQUEST_LIMIT`）。
-- GitHub Pages 展示版：`VITE_DEMO=1` 建置時以 `web/src/api/demo-api.ts` 取代 HTTP 後端，在瀏覽器內模擬，回覆為預錄文字，**不呼叫任何模型、不需要金鑰**。
+- GitHub Pages 展示版：`npm run build:demo`（Vite 的 `demo` mode）建置時以 `web/src/api/demo-api.ts` 取代 HTTP 後端，在瀏覽器內模擬，回覆為預錄文字，**不呼叫任何模型、不需要金鑰**。
 
 ---
 
@@ -85,7 +85,7 @@
 | 層級 | 技術 |
 | --- | --- |
 | 前端 | React + Vite + TypeScript、Tailwind CSS v4、Zustand（介面狀態）、TanStack Query（伺服器資料）、React Router |
-| 後端 | Node.js 22 + TypeScript，Hono（`@hono/node-server`），以 `tsx` 執行 |
+| 後端 | Node.js 22 / 26 + TypeScript，Hono（`@hono/node-server`），以 `tsx` 執行 |
 | 串流 | SSE（Server-Sent Events）；前端以 fetch 讀取（因為需要 POST） |
 | 資料庫 | SQLite（better-sqlite3）+ Drizzle ORM |
 | 檔案 | 本機資料夾（PNG 原檔、頭像） |
@@ -368,7 +368,7 @@ interface LLMProvider {
 
 ### 9.4 做完之後
 
-1. 自行檢查：能編譯、型別通過、既有測試不壞（CI 會跑 `typecheck`、`test`、`build`）；新增邏輯補上測試（特別是 Prompt 組裝、世界書觸發、角色卡匯入匯出）。
+1. 自行檢查：能編譯、型別通過、既有測試不壞（CI 會跑 `typecheck`、`test`、`build`，並在 Windows／macOS／Linux 與 Node 22、26 上跑安裝與端對端煙霧測試）；新增邏輯補上測試（特別是 Prompt 組裝、世界書觸發、角色卡匯入匯出）。
 2. 電腦與窄螢幕寬度、淺色與深色主題各看過一次。
 3. 若改動影響到本文件描述的內容（結構、規則、流程、進度），**同步更新 CLAUDE.md**。
 4. 回報時說明：做了什麼、改了哪些檔案、怎麼驗證、還有什麼沒做或需要使用者決定的事。回報精簡，不要重述每一個步驟。

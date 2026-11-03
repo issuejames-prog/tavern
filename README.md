@@ -10,7 +10,7 @@
 
 ## 需求
 
-- Node.js 22 以上（使用內建的 `.env` 載入）
+- Node.js 22 或 26（Windows、macOS、Linux 皆可，不需要另外安裝 Python 或編譯工具）
 - 一把 [OpenRouter](https://openrouter.ai/keys) API 金鑰
 
 ## 快速開始（本機）
@@ -56,6 +56,7 @@ npm start       # 後端同時提供 API 與網頁，http://127.0.0.1:8787
 | `npm run dev` | 開發模式（熱重載） |
 | `npm run typecheck` | 全專案型別檢查 |
 | `npm test` | 單元測試（Prompt 組裝、模型串流、角色卡） |
+| `npm run test:smoke` | 端對端測試：用假的模型端點跑完登入→對話→串流（需先 `npm run build`） |
 | `npm run build:demo` | 建置 GitHub Pages 展示版到 `web/dist-demo` |
 | `npm run db:generate` | 修改 `server/src/db/schema.ts` 後產生 migration |
 
