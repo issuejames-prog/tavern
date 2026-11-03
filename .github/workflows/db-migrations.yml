@@ -17,8 +17,6 @@ jobs:
         with:
           node-version: 22
       - run: npm install --no-audit --no-fund
-      - run: npm ls drizzle-orm drizzle-kit --all || true
-      - run: npm view drizzle-kit dist-tags && npm view drizzle-orm dist-tags
       - run: npm run db:generate
       - name: Commit migrations
         run: |
