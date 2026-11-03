@@ -68,6 +68,8 @@ export interface AssembleResult {
     /** Depth notes actually sent, e.g. "角色備註 @4". */
     notes: string[];
     examplesIncluded: boolean;
+    /** True only when the card has examples and they were cut for space. */
+    examplesDropped: boolean;
     historyIncluded: number;
     historyDropped: number;
     /** The must-keep layers alone exceed the budget. */
@@ -185,6 +187,7 @@ export function assemblePrompt(input: AssembleInput): AssembleResult {
       worldLabels: built.labels,
       notes: built.notes,
       examplesIncluded: includeExamples,
+      examplesDropped: examples.length > 0 && !includeExamples,
       historyIncluded: history.length,
       historyDropped: originalHistory - history.length,
       overBudget: tokens > input.budget,

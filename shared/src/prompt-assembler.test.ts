@@ -109,6 +109,7 @@ describe('assemblePrompt', () => {
 
     const { messages, report, tokens } = assemblePrompt(baseInput({ history: hist(6), budget }));
     expect(report.examplesIncluded).toBe(false);
+    expect(report.examplesDropped).toBe(true);
     expect(report.historyDropped).toBe(2);
     expect(tokens).toBeLessThanOrEqual(budget);
     expect(messages[1]!.content.startsWith('msg-2-')).toBe(true);

@@ -43,7 +43,7 @@ export function PromptBudget({ info }: { info: PromptInfo }) {
         <ul className="space-y-1 text-xs text-muted">
           {info.world_dropped > 0 && <li>· {lines.worldDropped(info.world_dropped)}</li>}
           {info.history_dropped > 0 && <li>· {lines.historyDropped(info.history_dropped)}</li>}
-          {!info.examples_included && <li>· {lines.examplesDropped}</li>}
+          {info.examples_dropped && <li>· {lines.examplesDropped}</li>}
           {info.over_budget && <li className="text-danger">· {lines.overBudget}</li>}
         </ul>
       </div>

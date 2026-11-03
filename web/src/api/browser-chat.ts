@@ -97,7 +97,7 @@ export async function generate(
     notes: assembled.report.notes,
     world_dropped: assembled.report.worldDropped + selected.dropped,
     history_dropped: assembled.report.historyDropped,
-    examples_included: assembled.report.examplesIncluded,
+    examples_dropped: assembled.report.examplesDropped,
     over_budget: assembled.report.overBudget,
   };
   lastPromptByChat.set(chatId, info);

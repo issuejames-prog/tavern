@@ -129,7 +129,7 @@ export interface PromptInfo {
   notes: string[];
   world_dropped: number;
   history_dropped: number;
-  examples_included: boolean;
+  examples_dropped: boolean;
   over_budget: boolean;
 }
 
