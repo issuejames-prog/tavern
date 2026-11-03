@@ -1,4 +1,5 @@
 import type { CharacterCardV2 } from './card';
+import type { WorldActivationSettings } from './world-engine';
 import type { WorldBook } from './world-info';
 
 export type Role = 'system' | 'user' | 'assistant';
@@ -62,8 +63,19 @@ export interface MessageRecord {
   created_at: string;
 }
 
+/** Per-chat author's note (作者備註): inserted N messages from the bottom, every `frequency` user turns. */
+export interface AuthorNote {
+  content: string;
+  depth: number;
+  /** 1 = every turn, N = every N-th user message, 0 = never. */
+  frequency: number;
+}
+
+export const DEFAULT_AUTHOR_NOTE: AuthorNote = { content: '', depth: 4, frequency: 1 };
+
 export interface ChatDetail extends ChatSummary {
   messages: MessageRecord[];
+  author_note: AuthorNote;
   /** Budget report from the most recent generation in this session, if any. */
   last_prompt: PromptInfo | null;
 }
@@ -95,7 +107,11 @@ export interface ModelProfile {
 
 export interface AppSettings {
   user_name: string;
+  /** The user's own persona (用戶描述), sent after the character definition. */
+  user_persona: string;
   system_prompt: string;
+  /** World Info activation settings (總體參數), shared by all world books. */
+  world: WorldActivationSettings;
 }
 
 export interface SettingsResponse {
@@ -109,6 +125,8 @@ export interface PromptInfo {
   tokens: number;
   budget: number;
   world_included: string[];
+  /** Depth notes sent, e.g. "角色備註 @4". */
+  notes: string[];
   world_dropped: number;
   history_dropped: number;
   examples_included: boolean;

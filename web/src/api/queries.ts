@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { AppSettings, ChatDetail, WorldBook } from '@tavern/shared';
+import type { AppSettings, AuthorNote, ChatDetail, WorldBook } from '@tavern/shared';
 import { api, type CharacterInput, type ProfileInput } from './index';
 
 export const keys = {
@@ -141,4 +141,17 @@ export function useUpdateProfile() {
 export function useImportBackup() {
   const qc = useQueryClient();
   return useMutation({ mutationFn: (file: File) => api.importBackup(file), onSuccess: () => void qc.invalidateQueries() });
+}
+
+export function useUpdateAuthorNote(chatId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (note: AuthorNote) => api.updateAuthorNote(chatId, note),
+    onSuccess: (chat) => qc.setQueryData(keys.chat(chatId), chat),
+  });
+}
+
+export function useAddFantasyExample() {
+  const refresh = useRefreshAll();
+  return useMutation({ mutationFn: () => api.addFantasyExample(), onSuccess: refresh });
 }

@@ -1,5 +1,6 @@
 import type {
   AppSettings,
+  AuthorNote,
   CharacterCardV2Data,
   CharacterDetail,
   CharacterSummary,
@@ -59,6 +60,7 @@ export interface TavernApi {
   getChat(id: number): Promise<ChatDetail>;
   createChat(characterId: number): Promise<ChatDetail>;
   deleteChat(id: number): Promise<void>;
+  updateAuthorNote(chatId: number, note: AuthorNote): Promise<ChatDetail>;
   /** Streams one turn. Resolves when the stream ends (normally, by error, or by abort). */
   generate(chatId: number, content: string, onEvent: (e: StreamEvent) => void, signal: AbortSignal): Promise<void>;
 
@@ -73,6 +75,9 @@ export interface TavernApi {
   getSettings(): Promise<SettingsResponse>;
   updateSettings(input: Partial<AppSettings>): Promise<SettingsResponse>;
   updateProfile(input: ProfileInput): Promise<ModelProfile>;
+
+  /** Adds the bundled western-fantasy example (character + linked world book). */
+  addFantasyExample(): Promise<CharacterImportResult>;
 
   exportBackup(): Promise<DownloadFile>;
   /** Replaces ALL data in this browser with the backup. The UI must confirm first. */

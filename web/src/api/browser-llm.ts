@@ -2,10 +2,21 @@ import type { ChatMessage, GenParams, ModelProfile, TokenUsage } from '@tavern/s
 import { t } from '../i18n/zh-TW';
 
 /*
- * Browser-mode model adapter (the counterpart of server/src/providers/ for the
- * GitHub Pages build). OpenRouter allows direct browser calls (CORS), so the
- * request goes straight from this tab to the provider using the viewer's own key.
+ * Model adapter (CLAUDE.md §4.4): messages in, text stream out, usage reported.
+ * OpenRouter allows direct browser calls (CORS), so the request goes straight
+ * from this tab to the provider using the viewer's own key.
  */
+
+/** Defaults for a fresh install. Provider specifics live only in this file (CLAUDE.md §5.2). */
+export const DEFAULT_PROVIDER: Pick<ModelProfile, 'name' | 'provider' | 'base_url' | 'model'> = {
+  name: 'OpenRouter',
+  provider: 'openrouter',
+  base_url: 'https://openrouter.ai/api/v1',
+  model: 'deepseek/deepseek-chat-v3-0324',
+};
+
+/** Where users create a key (linked from the settings page). */
+export const PROVIDER_KEYS_URL = 'https://openrouter.ai/keys';
 
 export class BrowserLlmError extends Error {
   constructor(

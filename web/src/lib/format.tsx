@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { t } from '../i18n/zh-TW';
 
 /** Renders role-play text: *actions* become soft italics, everything else stays verbatim. */
 export function renderRoleplay(text: string): ReactNode[] {
@@ -11,10 +12,10 @@ export function renderRoleplay(text: string): ReactNode[] {
 export function relativeTime(iso: string): string {
   const then = new Date(iso.endsWith('Z') ? iso : `${iso}Z`).getTime();
   const diff = Math.max(0, Date.now() - then) / 1000;
-  if (diff < 60) return '剛剛';
-  if (diff < 3600) return `${Math.floor(diff / 60)} 分鐘前`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} 小時前`;
-  if (diff < 86400 * 7) return `${Math.floor(diff / 86400)} 天前`;
+  if (diff < 60) return t.time.justNow;
+  if (diff < 3600) return t.time.minutes(Math.floor(diff / 60));
+  if (diff < 86400) return t.time.hours(Math.floor(diff / 3600));
+  if (diff < 86400 * 7) return t.time.days(Math.floor(diff / 86400));
   return new Date(then).toLocaleDateString('zh-TW');
 }
 

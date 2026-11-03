@@ -1,6 +1,8 @@
 import {
+  DEFAULT_AUTHOR_NOTE,
   DEFAULT_CONTEXT_TOKENS,
   DEFAULT_GEN_PARAMS,
+  DEFAULT_WORLD_SETTINGS,
   type CharacterDetail,
   type ChatSummary,
   type MessageRecord,
@@ -8,8 +10,10 @@ import {
   type WorldBook,
   type WorldBookSummary,
 } from '@tavern/shared';
-import { avatarKey, getBlob, loadState, saveState, type BrowserState, type StoredCharacter, type StoredChat } from './browser-db';
-import { SAMPLE_CARDS } from './sample-data';
+import { t } from '../i18n/zh-TW';
+import { avatarKey, getBlob, loadState, saveState, STATE_VERSION, type BrowserState, type StoredCharacter, type StoredChat } from './browser-db';
+import { DEFAULT_PROVIDER } from './browser-llm';
+import { sampleCharacters, sampleWorlds } from './sample-data';
 import { ApiRequestError } from './types';
 
 // In-memory working copy of the database plus small helpers shared by the API modules.
@@ -17,35 +21,29 @@ import { ApiRequestError } from './types';
 export const now = () => new Date().toISOString();
 export const today = () => new Date().toISOString().slice(0, 10);
 
-export const DEFAULT_SYSTEM_PROMPT =
-  '你正在與{{user}}進行一場沒有壓力的角色扮演。請完全以{{char}}的身分、語氣與觀點回應，' +
-  '描寫細節、保持角色一致，不要替{{user}}說話或決定{{user}}的行動。使用繁體中文。';
-
 export function initialState(): BrowserState {
+  const worlds = sampleWorlds(now());
   return {
-    version: 2,
+    version: STATE_VERSION,
     seq: 100,
-    characters: SAMPLE_CARDS.map((s, i) => ({
+    characters: sampleCharacters(worlds).map((s, i) => ({
       id: i + 1,
       card: s.card,
       avatar_color: s.color,
       has_avatar: false,
-      world_book_id: null,
+      world_book_id: s.world_book_id,
       updated_at: now(),
     })),
     chats: [],
     messages: [],
-    worlds: [],
-    settings: { user_name: '旅人', system_prompt: DEFAULT_SYSTEM_PROMPT },
-    profile: {
-      id: 1,
-      name: 'OpenRouter',
-      provider: 'openrouter',
-      base_url: 'https://openrouter.ai/api/v1',
-      model: 'deepseek/deepseek-chat-v3-0324',
-      params: { ...DEFAULT_GEN_PARAMS },
-      context_tokens: DEFAULT_CONTEXT_TOKENS,
+    worlds,
+    settings: {
+      user_name: t.data.defaultUserName,
+      user_persona: '',
+      system_prompt: t.data.defaultSystemPrompt,
+      world: { ...DEFAULT_WORLD_SETTINGS },
     },
+    profile: { id: 1, ...DEFAULT_PROVIDER, params: { ...DEFAULT_GEN_PARAMS }, context_tokens: DEFAULT_CONTEXT_TOKENS },
     usage: { day: today(), requests: 0 },
   };
 }
@@ -102,9 +100,7 @@ export const currentProfile = (): ModelProfile => ({ ...state.profile, key_prese
 // ---------- avatars ----------
 
 export async function refreshAvatarUrl(characterId: number): Promise<void> {
-  const old = avatarUrls.get(characterId);
-  if (old) URL.revokeObjectURL(old);
-  avatarUrls.delete(characterId);
+  forgetAvatarUrl(characterId);
   const blob = await getBlob(avatarKey(characterId));
   if (blob) avatarUrls.set(characterId, URL.createObjectURL(blob));
 }
@@ -119,19 +115,19 @@ export function forgetAvatarUrl(characterId: number) {
 
 export function findCharacter(id: number): StoredCharacter {
   const c = state.characters.find((x) => x.id === id);
-  if (!c) throw new ApiRequestError('NOT_FOUND', '找不到角色', 404);
+  if (!c) throw new ApiRequestError('NOT_FOUND', t.data.notFound.character, 404);
   return c;
 }
 
 export function findWorld(id: number): WorldBook {
   const w = state.worlds.find((x) => x.id === id);
-  if (!w) throw new ApiRequestError('NOT_FOUND', '找不到世界書', 404);
+  if (!w) throw new ApiRequestError('NOT_FOUND', t.data.notFound.world, 404);
   return w;
 }
 
 export function findChat(id: number): StoredChat {
   const chat = state.chats.find((c) => c.id === id);
-  if (!chat) throw new ApiRequestError('NOT_FOUND', '找不到這段對話', 404);
+  if (!chat) throw new ApiRequestError('NOT_FOUND', t.data.notFound.chat, 404);
   return chat;
 }
 
@@ -175,6 +171,10 @@ export function toWorldSummary(w: WorldBook): WorldBookSummary {
     linked_characters: state.characters.filter((c) => c.world_book_id === w.id).map((c) => c.card.data.name),
     updated_at: w.updated_at,
   };
+}
+
+export function newChat(characterId: number, title: string): StoredChat {
+  return { id: nextId(), title, character_id: characterId, author_note: { ...DEFAULT_AUTHOR_NOTE }, updated_at: now() };
 }
 
 export function addMessage(

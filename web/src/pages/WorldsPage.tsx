@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import type { WorldBookSummary } from '@tavern/shared';
 import { api, downloadFile } from '../api';
 import { useCreateWorldBook, useDeleteWorldBook, useImportWorldBook, useWorldBooks } from '../api/queries';
+import { ExampleButton } from '../components/common/ExampleButton';
 import { DropZone, FileButton, Notice } from '../components/common/files';
 import { Button, ConfirmDialog, EmptyState, ErrorNote, PageHeader, Spinner } from '../components/common/ui';
 import { t } from '../i18n/zh-TW';
@@ -49,6 +50,7 @@ export function WorldsPage() {
             lead={t.worlds.lead}
             actions={
               <>
+                <ExampleButton onDone={setNotice} onError={setExportError} />
                 <FileButton accept=".json,application/json" onFile={onFile} disabled={importBook.isPending}>
                   {importBook.isPending ? t.common.importing : t.common.import}
                 </FileButton>

@@ -1,4 +1,14 @@
-import type { AppSettings, CharacterCardV2, MessageRecord, ModelProfile, WorldBook } from '@tavern/shared';
+import {
+  DEFAULT_AUTHOR_NOTE,
+  DEFAULT_WORLD_SETTINGS,
+  migrateEntry,
+  type AppSettings,
+  type AuthorNote,
+  type CharacterCardV2,
+  type MessageRecord,
+  type ModelProfile,
+  type WorldBook,
+} from '@tavern/shared';
 
 /*
  * Persistence for the whole app: one IndexedDB database in this browser.
@@ -19,10 +29,13 @@ export interface StoredChat {
   id: number;
   title: string;
   character_id: number;
+  author_note: AuthorNote;
   updated_at: string;
 }
+export const STATE_VERSION = 3;
+
 export interface BrowserState {
-  version: 2;
+  version: 3;
   seq: number;
   characters: StoredCharacter[];
   chats: StoredChat[];
@@ -76,23 +89,46 @@ export async function isPersistent(): Promise<boolean> {
   return (await openDb()) !== null;
 }
 
-/** Older shapes → current shape. */
-function upgrade(raw: unknown): BrowserState | null {
+/**
+ * Older shapes → current shape (CLAUDE.md §4.5). Each step only adds or moves
+ * fields, so nothing the user wrote is lost.
+ *   v1 (stage 1, localStorage) → v2: world books, avatars, character ↔ world link
+ *   v2 → v3: per-chat author's note, user persona, global world activation settings;
+ *            entry options move into SillyTavern-style extensions
+ */
+export function upgrade(raw: unknown): BrowserState | null {
   if (!raw || typeof raw !== 'object') return null;
-  const s = raw as Record<string, unknown> & { version?: number };
-  if (s.version === 2) return s as unknown as BrowserState;
+  let s = raw as Record<string, unknown> & { version?: number };
+
   if (s.version === 1) {
-    const v1 = s as unknown as Omit<BrowserState, 'version' | 'worlds' | 'characters'> & {
-      characters: Omit<StoredCharacter, 'has_avatar' | 'world_book_id'>[];
-    };
-    return {
-      ...v1,
+    const v1 = s as { characters?: Record<string, unknown>[] };
+    s = {
+      ...s,
       version: 2,
       worlds: [],
-      characters: v1.characters.map((c) => ({ ...c, has_avatar: false, world_book_id: null })),
+      characters: (v1.characters ?? []).map((c) => ({ ...c, has_avatar: false, world_book_id: null })),
     };
   }
-  return null;
+  if (s.version === 2) {
+    const v2 = s as {
+      chats?: Record<string, unknown>[];
+      settings?: Record<string, unknown>;
+      worlds?: (Record<string, unknown> & { entries?: WorldBook['entries'] })[];
+    };
+    s = {
+      ...s,
+      version: 3,
+      chats: (v2.chats ?? []).map((c) => ({ author_note: { ...DEFAULT_AUTHOR_NOTE }, ...c })),
+      settings: { user_persona: '', world: { ...DEFAULT_WORLD_SETTINGS }, ...v2.settings },
+      worlds: (v2.worlds ?? []).map(({ scan_depth, token_budget, extra, entries, ...w }) => ({
+        ...w,
+        // Per-book values are now global settings; keep the originals for export.
+        extra: { ...(extra as Record<string, unknown> | undefined), scan_depth, token_budget },
+        entries: (entries ?? []).map(migrateEntry),
+      })),
+    };
+  }
+  return s.version === STATE_VERSION ? (s as unknown as BrowserState) : null;
 }
 
 export async function loadState(): Promise<BrowserState | null> {

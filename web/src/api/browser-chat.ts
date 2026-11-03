@@ -1,8 +1,10 @@
 import {
   assemblePrompt,
   estimateTokens,
+  readCharacterNote,
   scanWorldBooks,
   selectWorldSnippets,
+  worldBudget,
   type PromptInfo,
   type StreamEvent,
   type TokenUsage,
@@ -22,13 +24,11 @@ import {
 } from './browser-store';
 
 export const DAILY_LIMIT = 300;
-// World entries may take at most this share of the prompt budget in total.
-const WORLD_SHARE = 0.5;
 
 /** Last budget report per chat, shown in the chat header (not persisted). */
 export const lastPromptByChat = new Map<number, PromptInfo>();
 
-/** One chat turn — the steps of CLAUDE.md §4, in order. */
+/** One chat turn — the steps of CLAUDE.md §4.1, in order. */
 export async function generate(
   chatId: number,
   content: string,
@@ -59,22 +59,34 @@ export async function generate(
   const character = findCharacter(chat.character_id);
   const card = character.card.data;
   const profile = currentProfile();
+  const settings = state.settings;
   const budget = profile.context_tokens - profile.params.max_tokens;
 
-  // 3. World books: global ones plus the one linked to this character.
+  // 3. World books: global ones plus the one linked to this character, scanned with the global settings.
   const books = state.worlds.filter((w) => w.global || w.id === character.world_book_id);
-  const recentTexts = [...history.map((m) => m.content), content];
-  const world = selectWorldSnippets(scanWorldBooks(books, recentTexts), estimateTokens);
+  const activated = scanWorldBooks(books, history.map((m) => m.content), content, settings.world);
+  const wBudget = worldBudget(settings.world, budget);
+  const selected = selectWorldSnippets(activated, estimateTokens, wBudget);
+
+  // Author's note frequency: every N-th user message (1 = always, 0 = never).
+  const userTurns = history.filter((m) => m.role === 'user').length + 1;
+  const an = chat.author_note;
+  const authorNoteOn = an.content.trim() !== '' && an.frequency > 0 && userTurns % an.frequency === 0;
+  const charNote = readCharacterNote(card);
 
   // 4–5. Assemble within budget (the assembler re-assembles after each cut).
   const assembled = assemblePrompt({
-    systemPrompt: state.settings.system_prompt,
+    systemPrompt: settings.system_prompt,
     card,
-    userName: state.settings.user_name,
-    world,
-    worldBudget: Math.floor(budget * WORLD_SHARE),
+    userName: settings.user_name,
+    userPersona: settings.user_persona,
+    world: selected.snippets,
+    worldBudget: wBudget,
     history: history.map((m) => ({ role: m.role, content: m.content })),
     latestUser: content,
+    characterNote: charNote.prompt.trim() ? { content: charNote.prompt, depth: charNote.depth, label: t.notes.character } : null,
+    // Even when the note text is skipped this turn, its depth still anchors "author's note" world entries.
+    authorNote: { content: authorNoteOn ? an.content : '', depth: an.depth, label: t.notes.author },
     budget,
     countTokens: estimateTokens,
   });
@@ -82,7 +94,8 @@ export async function generate(
     tokens: assembled.tokens,
     budget,
     world_included: assembled.report.worldLabels,
-    world_dropped: assembled.report.worldDropped,
+    notes: assembled.report.notes,
+    world_dropped: assembled.report.worldDropped + selected.dropped,
     history_dropped: assembled.report.historyDropped,
     examples_included: assembled.report.examplesIncluded,
     over_budget: assembled.report.overBudget,

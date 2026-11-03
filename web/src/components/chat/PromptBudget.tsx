@@ -30,6 +30,16 @@ export function PromptBudget({ info }: { info: PromptInfo }) {
         ) : (
           <p className="mb-3 text-xs text-muted">{lines.worldNone}</p>
         )}
+        {info.notes.length > 0 && (
+          <>
+            <p className="mb-1 text-xs text-muted">{lines.notes}</p>
+            <ul className="mb-3 flex flex-wrap gap-1.5">
+              {info.notes.map((n) => (
+                <li key={n} className="rounded-full bg-surface-2 px-2.5 py-0.5 text-xs text-ink">{n}</li>
+              ))}
+            </ul>
+          </>
+        )}
         <ul className="space-y-1 text-xs text-muted">
           {info.world_dropped > 0 && <li>· {lines.worldDropped(info.world_dropped)}</li>}
           {info.history_dropped > 0 && <li>· {lines.historyDropped(info.history_dropped)}</li>}

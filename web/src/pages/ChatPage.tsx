@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useChat, useDeleteChat, useSettings } from '../api/queries';
 import { ChatComposer } from '../components/chat/ChatComposer';
 import { MessageBubble } from '../components/chat/MessageBubble';
+import { AuthorNoteDialog } from '../components/chat/AuthorNoteDialog';
 import { PromptBudget } from '../components/chat/PromptBudget';
 import { Avatar } from '../components/common/Avatar';
 import { Button, ConfirmDialog, ErrorNote, IconButton, Spinner } from '../components/common/ui';
@@ -19,6 +20,7 @@ export function ChatPage() {
   const navigate = useNavigate();
   const { readingSerif, setReadingSerif } = useUiStore();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
 
@@ -61,6 +63,13 @@ export function ChatPage() {
           </p>
         </div>
         {data.last_prompt && <PromptBudget info={data.last_prompt} />}
+        <Button
+          variant="quiet"
+          className={`min-h-9 px-3 ${data.author_note.content.trim() ? 'text-accent' : ''}`}
+          onClick={() => setNoteOpen(true)}
+        >
+          {data.author_note.content.trim() ? t.chat.authorNote.on(data.author_note.depth) : t.chat.authorNote.button}
+        </Button>
         <Button
           variant="quiet"
           className={`min-h-9 px-3 ${readingSerif ? 'text-accent' : ''}`}
@@ -118,6 +127,7 @@ export function ChatPage() {
         <ChatComposer streaming={stream.isStreaming} onSend={stream.send} onStop={stream.stop} />
       </div>
 
+      <AuthorNoteDialog chatId={chatId} note={data.author_note} open={noteOpen} onClose={() => setNoteOpen(false)} />
       <ConfirmDialog
         open={confirmOpen}
         message={t.chat.deleteConfirm}
