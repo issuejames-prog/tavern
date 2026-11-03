@@ -1,0 +1,47 @@
+{
+  "name": "星落群島",
+  "x_file_field": "keep",
+  "entries": {
+    "0": {
+      "uid": 0,
+      "key": ["星落", "群島"],
+      "keysecondary": [],
+      "comment": "群島總覽",
+      "content": "星落群島由七座島組成，傳說是星星落海後長出來的。",
+      "constant": false,
+      "selective": true,
+      "order": 100,
+      "position": 0,
+      "disable": false,
+      "probability": 100,
+      "depth": 4,
+      "group": ""
+    },
+    "1": {
+      "uid": 1,
+      "key": ["市集"],
+      "keysecondary": ["夜晚", "晚上"],
+      "comment": "夜市",
+      "content": "只有晚上才開的市集，攤販用貝殼交易。",
+      "constant": false,
+      "selective": true,
+      "order": 90,
+      "position": 4,
+      "disable": false,
+      "probability": 100,
+      "depth": 2
+    },
+    "2": {
+      "uid": 2,
+      "key": ["海怪"],
+      "keysecondary": [],
+      "comment": "停用條目",
+      "content": "這條被停用了。",
+      "constant": false,
+      "selective": true,
+      "order": 10,
+      "position": 1,
+      "disable": true
+    }
+  }
+}

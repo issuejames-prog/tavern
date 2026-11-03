@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { IS_BROWSER } from '../../api';
-import { useChats, useLogout } from '../../api/queries';
+import { useEffect, useState } from 'react';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { isPersistent } from '../../api/browser-db';
+import { useChats } from '../../api/queries';
 import { t } from '../../i18n/zh-TW';
 import { plainPreview } from '../../lib/format';
 import { useUiStore, type ThemeChoice } from '../../stores/ui-store';
@@ -11,7 +11,7 @@ import { IconButton, MugIcon } from '../common/ui';
 const navItems = [
   { to: '/', label: t.nav.home, icon: 'M4 11l8-6 8 6v8a1 1 0 0 1-1 1h-4v-5h-6v5H5a1 1 0 0 1-1-1z', end: true },
   { to: '/characters', label: t.nav.characters, icon: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 20c1.5-4 4.5-6 8-6s6.5 2 8 6' },
-  { to: '/worlds', label: t.nav.worlds, icon: 'M5 4h10a4 4 0 0 1 4 4v12H9a4 4 0 0 1-4-4zM5 16a4 4 0 0 1 4-4h10', soon: true },
+  { to: '/worlds', label: t.nav.worlds, icon: 'M5 4h10a4 4 0 0 1 4 4v12H9a4 4 0 0 1-4-4zM5 16a4 4 0 0 1 4-4h10' },
   { to: '/settings', label: t.nav.settings, icon: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 12h2m12 0h2M12 4v2m0 12v2M6.3 6.3l1.4 1.4m8.6 8.6 1.4 1.4m0-11.4-1.4 1.4m-8.6 8.6-1.4 1.4' },
 ];
 
@@ -32,8 +32,6 @@ const themeIcon: Record<ThemeChoice, string> = {
 
 function Sidebar() {
   const { data: chats } = useChats();
-  const logout = useLogout();
-  const navigate = useNavigate();
   const { theme, setTheme } = useUiStore();
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -58,7 +56,6 @@ function Sidebar() {
           <NavLink key={item.to} to={item.to} end={item.end} className={linkClass}>
             <NavIcon d={item.icon} />
             <span className="flex-1">{item.label}</span>
-            {item.soon && <span className="rounded border border-line px-1.5 text-[11px] text-muted">{t.nav.comingSoon}</span>}
           </NavLink>
         ))}
       </nav>
@@ -74,7 +71,7 @@ function Sidebar() {
               `flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors ${isActive ? 'bg-surface-2' : 'hover:bg-surface-2/70'}`
             }
           >
-            <Avatar name={chat.character_name} color={chat.avatar_color} size={32} />
+            <Avatar name={chat.character_name} color={chat.avatar_color} src={chat.avatar_url} size={32} />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-medium">{chat.character_name}</span>
               <span className="block truncate text-xs text-muted">{plainPreview(chat.last_message, 28)}</span>
@@ -90,16 +87,7 @@ function Sidebar() {
         >
           <NavIcon d={themeIcon[theme]} />
         </IconButton>
-        <span className="flex-1 text-xs text-muted">{IS_BROWSER ? t.browser.badge : t.theme[theme]}</span>
-        {!IS_BROWSER && (
-        <button
-          type="button"
-          className="min-h-11 rounded-lg px-3 text-sm text-muted hover:bg-surface-2 hover:text-ink"
-          onClick={() => logout.mutate(undefined, { onSuccess: () => navigate('/login') })}
-        >
-          {t.nav.logout}
-        </button>
-        )}
+        <span className="flex-1 text-xs text-muted">{t.theme[theme]}</span>
       </div>
     </div>
   );
@@ -109,6 +97,10 @@ export function AppShell() {
   const { sidebarOpen, setSidebarOpen } = useUiStore();
   const location = useLocation();
   useEffect(() => setSidebarOpen(false), [location.pathname, setSidebarOpen]);
+  const [canPersist, setCanPersist] = useState(true);
+  useEffect(() => {
+    void isPersistent().then(setCanPersist);
+  }, []);
 
   return (
     <div className="flex h-full">
@@ -132,6 +124,11 @@ export function AppShell() {
           </IconButton>
           <span className="font-serif text-lg font-semibold">{t.brand.name}</span>
         </header>
+        {!canPersist && (
+          <p className="border-b border-line bg-danger-soft px-4 py-2 text-center text-xs text-danger" role="alert">
+            {t.browser.storageWarning}
+          </p>
+        )}
         <main className="lamp-glow min-h-0 flex-1">
           <Outlet />
         </main>

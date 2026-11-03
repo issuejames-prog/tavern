@@ -1,11 +1,20 @@
 import { browserApi } from './browser-api';
-import { httpApi } from './http-api';
-import type { TavernApi } from './types';
+import type { DownloadFile, TavernApi } from './types';
 
-// `npm run build:pages` builds with Vite mode "browser" for GitHub Pages, where there is no server.
-export const IS_BROWSER = import.meta.env.MODE === 'browser';
+// The whole app runs in the browser (GitHub Pages); see docs/decisions/2026-11-03-html-only.md.
+export const api: TavernApi = browserApi;
 
-export const api: TavernApi = IS_BROWSER ? browserApi : httpApi;
+/** Saves a file produced by an export call. */
+export function downloadFile({ blob, fileName }: DownloadFile) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
 export { ApiRequestError } from './types';
 export type { CharacterInput, ProfileInput } from './types';

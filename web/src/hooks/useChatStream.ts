@@ -48,6 +48,9 @@ export function useChatStream(chatId: number) {
                 accepted = true;
                 appendMessage(event.message);
                 break;
+              case 'prompt':
+                qc.setQueryData<ChatDetail>(keys.chat(chatId), (old) => (old ? { ...old, last_prompt: event.info } : old));
+                break;
               case 'delta':
                 setStreamingText((prev) => (prev ?? '') + event.text);
                 break;

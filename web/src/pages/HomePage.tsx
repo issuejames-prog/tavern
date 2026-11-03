@@ -1,5 +1,4 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { IS_BROWSER } from '../api';
 import { useCharacters, useChats, useCreateChat, useSettings } from '../api/queries';
 import { Avatar } from '../components/common/Avatar';
 import { Button, EmptyState, ErrorNote, MugIcon, Spinner } from '../components/common/ui';
@@ -25,7 +24,7 @@ export function HomePage() {
     createChat.mutate(characterId, { onSuccess: (chat) => navigate(`/chat/${chat.id}`) });
 
   const userName = settings.data?.settings.user_name;
-  const needsKey = IS_BROWSER && settings.data?.profiles[0]?.key_present === false;
+  const needsKey = settings.data?.profile.key_present === false;
 
   return (
     <div className="scroll-soft h-full overflow-y-auto">
@@ -63,7 +62,7 @@ export function HomePage() {
                   to={`/chat/${chat.id}`}
                   className="group flex gap-4 rounded-lg border border-line bg-surface p-4 transition-colors hover:border-accent/50 hover:bg-surface-2/60"
                 >
-                  <Avatar name={chat.character_name} color={chat.avatar_color} size={44} />
+                  <Avatar name={chat.character_name} color={chat.avatar_color} src={chat.avatar_url} size={44} />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline justify-between gap-2">
                       <span className="truncate font-medium">{chat.character_name}</span>
@@ -102,7 +101,7 @@ export function HomePage() {
             {characters.data?.map((c) => (
               <article key={c.id} className="flex flex-col rounded-lg border border-line bg-surface p-5">
                 <div className="flex items-center gap-3">
-                  <Avatar name={c.name} color={c.avatar_color} size={48} />
+                  <Avatar name={c.name} color={c.avatar_color} src={c.avatar_url} size={48} />
                   <div className="min-w-0">
                     <h3 className="truncate font-serif text-lg font-semibold">{c.name}</h3>
                     <p className="truncate text-xs text-muted">{c.tags.join(' · ')}</p>

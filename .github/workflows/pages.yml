@@ -1,6 +1,6 @@
 name: Deploy to GitHub Pages
 
-# Builds the web app in browser mode (no server; each viewer uses their own
+# Builds the app (it runs entirely in the browser; each viewer uses their own
 # OpenRouter key, kept in their browser) and publishes it to the gh-pages branch.
 on:
   push:
@@ -23,9 +23,9 @@ jobs:
         with:
           node-version: 22
       - run: npm install --no-audit --no-fund
-      - run: npm run build:pages
+      - run: npm run build
       - name: Publish to gh-pages
-        working-directory: web/dist-pages
+        working-directory: web/dist
         run: |
           touch .nojekyll
           git init -q -b gh-pages

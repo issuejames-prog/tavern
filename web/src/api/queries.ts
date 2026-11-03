@@ -1,65 +1,69 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { AppSettings, ChatDetail } from '@tavern/shared';
+import type { AppSettings, ChatDetail, WorldBook } from '@tavern/shared';
 import { api, type CharacterInput, type ProfileInput } from './index';
 
 export const keys = {
-  me: ['me'] as const,
   characters: ['characters'] as const,
   character: (id: number) => ['characters', id] as const,
   chats: ['chats'] as const,
   chat: (id: number) => ['chats', id] as const,
+  worlds: ['worlds'] as const,
+  world: (id: number) => ['worlds', id] as const,
   settings: ['settings'] as const,
 };
 
-export const useMe = () => useQuery({ queryKey: keys.me, queryFn: () => api.me(), staleTime: 60_000 });
 export const useCharacters = () => useQuery({ queryKey: keys.characters, queryFn: () => api.listCharacters() });
 export const useCharacter = (id: number | null) =>
   useQuery({ queryKey: keys.character(id ?? 0), queryFn: () => api.getCharacter(id!), enabled: id !== null });
 export const useChats = () => useQuery({ queryKey: keys.chats, queryFn: () => api.listChats() });
 export const useChat = (id: number) => useQuery({ queryKey: keys.chat(id), queryFn: () => api.getChat(id) });
+export const useWorldBooks = () => useQuery({ queryKey: keys.worlds, queryFn: () => api.listWorldBooks() });
+export const useWorldBook = (id: number) => useQuery({ queryKey: keys.world(id), queryFn: () => api.getWorldBook(id) });
 export const useSettings = () => useQuery({ queryKey: keys.settings, queryFn: () => api.getSettings() });
 
-export function useLogin() {
+/** Characters, chats and world books reference each other (names, avatars, links), so refresh them together. */
+function useRefreshAll() {
   const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (password: string) => api.login(password),
-    onSuccess: () => qc.setQueryData(keys.me, { authenticated: true }),
-  });
-}
-
-export function useLogout() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: () => api.logout(),
-    onSuccess: () => {
-      qc.clear();
-      qc.setQueryData(keys.me, { authenticated: false });
-    },
-  });
+  return () => {
+    void qc.invalidateQueries({ queryKey: keys.characters });
+    void qc.invalidateQueries({ queryKey: keys.chats });
+    void qc.invalidateQueries({ queryKey: keys.worlds });
+  };
 }
 
 export function useSaveCharacter() {
   const qc = useQueryClient();
+  const refresh = useRefreshAll();
   return useMutation({
     mutationFn: ({ id, input }: { id: number | null; input: CharacterInput }) =>
       id === null ? api.createCharacter(input) : api.updateCharacter(id, input),
     onSuccess: (detail) => {
       qc.setQueryData(keys.character(detail.id), detail);
-      void qc.invalidateQueries({ queryKey: keys.characters, exact: true });
-      void qc.invalidateQueries({ queryKey: keys.chats });
+      refresh();
     },
   });
 }
 
-export function useDeleteCharacter() {
+export function useSetAvatar() {
   const qc = useQueryClient();
+  const refresh = useRefreshAll();
   return useMutation({
-    mutationFn: (id: number) => api.deleteCharacter(id),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: keys.characters });
-      void qc.invalidateQueries({ queryKey: keys.chats });
+    mutationFn: ({ id, file }: { id: number; file: File | null }) => api.setAvatar(id, file),
+    onSuccess: (detail) => {
+      qc.setQueryData(keys.character(detail.id), detail);
+      refresh();
     },
   });
+}
+
+export function useImportCharacter() {
+  const refresh = useRefreshAll();
+  return useMutation({ mutationFn: (file: File) => api.importCharacter(file), onSuccess: refresh });
+}
+
+export function useDeleteCharacter() {
+  const refresh = useRefreshAll();
+  return useMutation({ mutationFn: (id: number) => api.deleteCharacter(id), onSuccess: refresh });
 }
 
 export function useCreateChat() {
@@ -84,6 +88,40 @@ export function useDeleteChat() {
   });
 }
 
+export function useCreateWorldBook() {
+  const refresh = useRefreshAll();
+  return useMutation({ mutationFn: (name: string) => api.createWorldBook(name), onSuccess: refresh });
+}
+
+export function useImportWorldBook() {
+  const refresh = useRefreshAll();
+  return useMutation({ mutationFn: (file: File) => api.importWorldBook(file), onSuccess: refresh });
+}
+
+export function useSaveWorldBook() {
+  const qc = useQueryClient();
+  const refresh = useRefreshAll();
+  return useMutation({
+    mutationFn: (book: WorldBook) => api.saveWorldBook(book),
+    onSuccess: (saved) => {
+      qc.setQueryData(keys.world(saved.id), saved);
+      refresh();
+    },
+  });
+}
+
+export function useDeleteWorldBook() {
+  const qc = useQueryClient();
+  const refresh = useRefreshAll();
+  return useMutation({
+    mutationFn: (id: number) => api.deleteWorldBook(id),
+    onSuccess: (_d, id) => {
+      qc.removeQueries({ queryKey: keys.world(id) });
+      refresh();
+    },
+  });
+}
+
 export function useUpdateSettings() {
   const qc = useQueryClient();
   return useMutation({
@@ -95,7 +133,12 @@ export function useUpdateSettings() {
 export function useUpdateProfile() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, input }: { id: number; input: ProfileInput }) => api.updateProfile(id, input),
+    mutationFn: (input: ProfileInput) => api.updateProfile(input),
     onSuccess: () => void qc.invalidateQueries({ queryKey: keys.settings }),
   });
+}
+
+export function useImportBackup() {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: (file: File) => api.importBackup(file), onSuccess: () => void qc.invalidateQueries() });
 }

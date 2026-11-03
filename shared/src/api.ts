@@ -1,4 +1,5 @@
 import type { CharacterCardV2 } from './card';
+import type { WorldBook } from './world-info';
 
 export type Role = 'system' | 'user' | 'assistant';
 
@@ -19,10 +20,6 @@ export interface TokenUsage {
   total_tokens: number;
 }
 
-export interface ApiError {
-  error: { code: string; message: string };
-}
-
 // ---- Resources ----
 
 export interface CharacterSummary {
@@ -31,6 +28,10 @@ export interface CharacterSummary {
   description: string;
   tags: string[];
   avatar_color: string;
+  /** Object URL of the avatar image, or null to draw the initial. */
+  avatar_url: string | null;
+  /** World book linked to this character (besides global books). */
+  world_book_id: number | null;
   updated_at: string;
 }
 
@@ -44,6 +45,7 @@ export interface ChatSummary {
   character_id: number;
   character_name: string;
   avatar_color: string;
+  avatar_url: string | null;
   updated_at: string;
   last_message: string | null;
 }
@@ -62,8 +64,22 @@ export interface MessageRecord {
 
 export interface ChatDetail extends ChatSummary {
   messages: MessageRecord[];
-  model_profile_id: number | null;
+  /** Budget report from the most recent generation in this session, if any. */
+  last_prompt: PromptInfo | null;
 }
+
+export interface WorldBookSummary {
+  id: number;
+  name: string;
+  description: string;
+  global: boolean;
+  entry_count: number;
+  enabled_count: number;
+  linked_characters: string[];
+  updated_at: string;
+}
+
+export type { WorldBook };
 
 export interface ModelProfile {
   id: number;
@@ -71,13 +87,10 @@ export interface ModelProfile {
   provider: 'openrouter' | 'openai-compatible';
   base_url: string;
   model: string;
-  /** Name of the env var that holds the key. The key itself never leaves the server. */
-  key_env: string;
-  /** Whether that env var is actually set on the server. */
+  /** Whether an API key has been entered in this browser. The key itself is never exposed to the UI. */
   key_present: boolean;
   params: GenParams;
   context_tokens: number;
-  is_default: boolean;
 }
 
 export interface AppSettings {
@@ -87,14 +100,26 @@ export interface AppSettings {
 
 export interface SettingsResponse {
   settings: AppSettings;
-  profiles: ModelProfile[];
+  profile: ModelProfile;
   usage_today: { requests: number; limit: number };
 }
 
-// ---- SSE events from POST /api/chats/:id/generate ----
+/** What went into the last prompt — shown as the budget meter in the chat header. */
+export interface PromptInfo {
+  tokens: number;
+  budget: number;
+  world_included: string[];
+  world_dropped: number;
+  history_dropped: number;
+  examples_included: boolean;
+  over_budget: boolean;
+}
+
+// ---- Stream events for one generation ----
 
 export type StreamEvent =
   | { type: 'user_saved'; message: MessageRecord }
+  | { type: 'prompt'; info: PromptInfo }
   | { type: 'delta'; text: string }
   | { type: 'done'; message: MessageRecord; usage: TokenUsage | null }
   | { type: 'error'; code: string; message: string; partial: MessageRecord | null };

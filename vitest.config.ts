@@ -2,7 +2,7 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    include: ['server/src/**/*.test.ts', 'shared/src/**/*.test.ts'],
+    include: ['shared/src/**/*.test.ts'],
     environment: 'node',
   },
 });

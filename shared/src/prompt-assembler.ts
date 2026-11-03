@@ -6,6 +6,10 @@ export interface WorldSnippet {
   content: string;
   priority: number;
   insertion_order: number;
+  /** before_char entries are placed ahead of after_char ones inside the world section. */
+  position?: 'before_char' | 'after_char';
+  /** Human-readable name for budget reports (entry comment or first key). */
+  label?: string;
 }
 
 export interface AssembleInput {
@@ -13,7 +17,7 @@ export interface AssembleInput {
   systemPrompt: string;
   card: CharacterCardV2Data;
   userName: string;
-  /** Already-triggered world entries (stage 2 fills this; stage 1 passes []). */
+  /** Already-triggered world entries (see world-engine.ts). */
   world: WorldSnippet[];
   /** Max tokens world entries may take on their own. */
   worldBudget?: number;
@@ -31,6 +35,8 @@ export interface AssembleResult {
   report: {
     worldIncluded: number;
     worldDropped: number;
+    /** Labels of the world entries actually sent, in prompt order. */
+    worldLabels: string[];
     examplesIncluded: boolean;
     historyIncluded: number;
     historyDropped: number;
@@ -94,11 +100,17 @@ export function assemblePrompt(input: AssembleInput): AssembleResult {
   // ---- Layer 4: history ----
   let history = input.history.map((m) => ({ ...m, content: sub(m.content) }));
 
+  const promptOrder = (list: WorldSnippet[]) =>
+    [...list].sort(
+      (a, b) =>
+        Number(a.position === 'after_char') - Number(b.position === 'after_char') ||
+        a.insertion_order - b.insertion_order,
+    );
+
   const build = (): ChatMessage[] => {
     const out: ChatMessage[] = [systemMsg];
     if (world.length) {
-      const text = [...world]
-        .sort((a, b) => a.insertion_order - b.insertion_order)
+      const text = promptOrder(world)
         .map((w) => sub(w.content).trim())
         .join('\n');
       out.push({ role: 'system', content: section('世界資訊', text) });
@@ -136,6 +148,7 @@ export function assemblePrompt(input: AssembleInput): AssembleResult {
     report: {
       worldIncluded: world.length,
       worldDropped: input.world.length - world.length,
+      worldLabels: promptOrder(world).map((w) => w.label ?? ''),
       examplesIncluded: includeExamples,
       historyIncluded: history.length,
       historyDropped: originalHistory - history.length,

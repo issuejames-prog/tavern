@@ -1,8 +1,9 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import type { ModelProfile } from '@tavern/shared';
-import { IS_BROWSER } from '../api';
-import { useSettings, useUpdateProfile, useUpdateSettings } from '../api/queries';
-import { Button, ErrorNote, Field, PageHeader, Spinner } from '../components/common/ui';
+import { api, downloadFile } from '../api';
+import { useImportBackup, useSettings, useUpdateProfile, useUpdateSettings } from '../api/queries';
+import { FileButton, Notice } from '../components/common/files';
+import { Button, ConfirmDialog, ErrorNote, Field, PageHeader, Spinner } from '../components/common/ui';
 import { t } from '../i18n/zh-TW';
 import { useUiStore, type ThemeChoice } from '../stores/ui-store';
 
@@ -29,22 +30,21 @@ function SaveRow({ pending, saved, error }: { pending: boolean; saved: boolean; 
   );
 }
 
-function KeyStatus({ present, label }: { present: boolean; label: string }) {
+function KeyStatus({ present }: { present: boolean }) {
   return (
     <p className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs ${present ? 'bg-accent-soft text-accent' : 'bg-danger-soft text-danger'}`}>
       <span className="size-1.5 rounded-full bg-current" />
-      {label}
+      {present ? t.browser.keySaved : t.browser.keyMissing}
     </p>
   );
 }
 
-/** Browser mode: the viewer's own OpenRouter key, kept only in this browser. */
-function BrowserKeyForm({ profile }: { profile: ModelProfile }) {
+/** The user's own OpenRouter key, kept only in this browser. */
+function KeyForm({ profile }: { profile: ModelProfile }) {
   const update = useUpdateProfile();
   const [key, setKey] = useState('');
   const [visible, setVisible] = useState(false);
-
-  const save = (value: string) => update.mutate({ id: profile.id, input: { api_key: value } }, { onSuccess: () => setKey('') });
+  const save = (value: string) => update.mutate({ api_key: value }, { onSuccess: () => setKey('') });
 
   return (
     <form
@@ -54,7 +54,7 @@ function BrowserKeyForm({ profile }: { profile: ModelProfile }) {
       }}
       className="space-y-4"
     >
-      <KeyStatus present={profile.key_present} label={profile.key_present ? t.browser.keySaved : t.browser.keyMissing} />
+      <KeyStatus present={profile.key_present} />
       <div className="flex gap-2">
         <div className="flex-1">
           <Field
@@ -88,13 +88,12 @@ function BrowserKeyForm({ profile }: { profile: ModelProfile }) {
   );
 }
 
-function ProfileForm({ profile }: { profile: ModelProfile }) {
+function ModelForm({ profile }: { profile: ModelProfile }) {
   const update = useUpdateProfile();
   const [f, setF] = useState(() => ({
     provider: profile.provider,
     base_url: profile.base_url,
     model: profile.model,
-    key_env: profile.key_env,
     temperature: String(profile.params.temperature),
     top_p: String(profile.params.top_p),
     max_tokens: String(profile.params.max_tokens),
@@ -105,15 +104,11 @@ function ProfileForm({ profile }: { profile: ModelProfile }) {
   const submit = (e: FormEvent) => {
     e.preventDefault();
     update.mutate({
-      id: profile.id,
-      input: {
-        provider: f.provider,
-        base_url: f.base_url,
-        model: f.model,
-        key_env: f.key_env,
-        params: { temperature: Number(f.temperature), top_p: Number(f.top_p), max_tokens: Number(f.max_tokens) },
-        context_tokens: Number(f.context_tokens),
-      },
+      provider: f.provider,
+      base_url: f.base_url,
+      model: f.model,
+      params: { temperature: Number(f.temperature), top_p: Number(f.top_p), max_tokens: Number(f.max_tokens) },
+      context_tokens: Number(f.context_tokens),
     });
   };
 
@@ -137,12 +132,6 @@ function ProfileForm({ profile }: { profile: ModelProfile }) {
         <div className="sm:col-span-2">
           <Field label={t.settings.model} hint={t.settings.modelHint} value={f.model} onChange={set('model')} />
         </div>
-        {!IS_BROWSER && (
-          <div className="space-y-2 sm:col-span-2">
-            <Field label={t.settings.keyEnv} hint={t.settings.keyEnvHint} value={f.key_env} onChange={set('key_env')} />
-            <KeyStatus present={profile.key_present} label={profile.key_present ? t.settings.keyPresent : t.settings.keyMissing} />
-          </div>
-        )}
         <Field label={t.settings.temperature} hint={t.settings.temperatureHint} value={f.temperature} onChange={set('temperature')} inputMode="decimal" />
         <Field label={t.settings.topP} value={f.top_p} onChange={set('top_p')} inputMode="decimal" />
         <Field label={t.settings.maxTokens} value={f.max_tokens} onChange={set('max_tokens')} inputMode="numeric" />
@@ -175,10 +164,58 @@ function ProfileSettings({ userName, systemPrompt }: { userName: string; systemP
   );
 }
 
+function BackupSection() {
+  const restore = useImportBackup();
+  const [file, setFile] = useState<File | null>(null);
+  const [done, setDone] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+  const B = t.settings.backup;
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm leading-relaxed text-muted">{B.body}</p>
+      {done && <Notice message={B.done} onClose={() => setDone(false)} />}
+      {(restore.error || exportError) && <ErrorNote message={restore.error?.message ?? exportError ?? ''} />}
+      <div className="flex flex-wrap gap-3">
+        <Button
+          variant="primary"
+          onClick={async () => {
+            setExportError(null);
+            try {
+              downloadFile(await api.exportBackup());
+            } catch (err) {
+              setExportError(err instanceof Error ? err.message : String(err));
+            }
+          }}
+        >
+          {B.export}
+        </Button>
+        <FileButton accept=".json,application/json" onFile={(f) => setFile(f)}>
+          {B.import}
+        </FileButton>
+      </div>
+      <ConfirmDialog
+        open={file !== null}
+        message={B.confirm}
+        confirmLabel={B.confirmAction}
+        busy={restore.isPending}
+        onCancel={() => setFile(null)}
+        onConfirm={() =>
+          file &&
+          restore.mutate(file, {
+            onSuccess: () => setDone(true),
+            onSettled: () => setFile(null),
+          })
+        }
+      />
+    </div>
+  );
+}
+
 export function SettingsPage() {
   const settings = useSettings();
   const { theme, setTheme, readingSerif, setReadingSerif } = useUiStore();
-  const profile = settings.data?.profiles[0];
+  const data = settings.data;
 
   return (
     <div className="scroll-soft h-full overflow-y-auto">
@@ -187,24 +224,22 @@ export function SettingsPage() {
         {settings.isPending && <Spinner />}
         {settings.error && <ErrorNote message={settings.error.message} onRetry={() => void settings.refetch()} />}
 
-        {settings.data && (
+        {data && (
           <>
-            {IS_BROWSER && profile && (
-              <Card title={t.browser.keyLabel}>
-                <BrowserKeyForm profile={profile} />
-              </Card>
-            )}
-            <Card title={t.settings.sections.profile}>
-              <ProfileSettings userName={settings.data.settings.user_name} systemPrompt={settings.data.settings.system_prompt} />
+            <Card title={t.settings.sections.key}>
+              <KeyForm profile={data.profile} />
             </Card>
-            {profile && (
-              <Card title={t.settings.sections.model}>
-                <ProfileForm key={profile.id} profile={profile} />
-              </Card>
-            )}
+            <Card title={t.settings.sections.profile}>
+              <ProfileSettings userName={data.settings.user_name} systemPrompt={data.settings.system_prompt} />
+            </Card>
+            <Card title={t.settings.sections.model}>
+              <ModelForm profile={data.profile} />
+            </Card>
             <Card title={t.settings.sections.usage}>
-              <p className="text-muted">{t.settings.usageText(settings.data.usage_today.requests, settings.data.usage_today.limit)}</p>
-              {IS_BROWSER && <p className="mt-3 text-xs leading-relaxed text-muted">{t.browser.dataNote}</p>}
+              <p className="text-muted">{t.settings.usageText(data.usage_today.requests, data.usage_today.limit)}</p>
+            </Card>
+            <Card title={t.settings.backup.title}>
+              <BackupSection />
             </Card>
           </>
         )}
@@ -233,6 +268,7 @@ export function SettingsPage() {
             />
             <span className="text-sm">{t.settings.readingSerif}</span>
           </label>
+          <p className="mt-6 text-xs leading-relaxed text-muted">{t.browser.dataNote}</p>
         </Card>
       </div>
     </div>

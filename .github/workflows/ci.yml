@@ -19,43 +19,5 @@ jobs:
         run: npm run typecheck
       - name: Test
         run: npm test
-      - name: Build web
+      - name: Build
         run: npm run build
-      - name: Build GitHub Pages (browser mode)
-        run: npm run build:pages
-      - name: End-to-end smoke test (fake model endpoint)
-        run: node tests/smoke.mjs
-      - name: Migrations match schema
-        run: |
-          npm run db:generate
-          git status --porcelain server/src/db/migrations
-          test -z "$(git status --porcelain server/src/db/migrations)" || (echo "::error::Schema changed without a migration. Run npm run db:generate and commit." && exit 1)
-
-  # Native modules (better-sqlite3) must install from prebuilt binaries, without
-  # Python or a C++ toolchain, on the Node versions people actually run.
-  runtime:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { os: windows-latest, node: 26 }
-          - { os: windows-latest, node: 22 }
-          - { os: macos-latest, node: 26 }
-          - { os: ubuntu-latest, node: 26 }
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node }}
-      - run: npm view better-sqlite3 version
-      - name: Install (prebuilt binaries only)
-        run: npm install --no-audit --no-fund
-        env:
-          # Fail instead of silently falling back to a source build.
-          npm_config_build_from_source: 'false'
-      - run: node -e "const D=require('better-sqlite3'); console.log('sqlite', new D(':memory:').prepare('select sqlite_version() v').get().v)"
-        working-directory: server
-      - run: npm test
-      - run: npm run build
-      - run: node tests/smoke.mjs

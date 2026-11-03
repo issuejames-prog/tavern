@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useChat, useDeleteChat, useSettings } from '../api/queries';
 import { ChatComposer } from '../components/chat/ChatComposer';
 import { MessageBubble } from '../components/chat/MessageBubble';
+import { PromptBudget } from '../components/chat/PromptBudget';
 import { Avatar } from '../components/common/Avatar';
 import { Button, ConfirmDialog, ErrorNote, IconButton, Spinner } from '../components/common/ui';
 import { useChatStream } from '../hooks/useChatStream';
@@ -45,20 +46,21 @@ export function ChatPage() {
   }
 
   const data = chat.data;
-  const profile = settings.data?.profiles.find((p) => p.id === data.model_profile_id) ?? settings.data?.profiles[0];
+  const profile = settings.data?.profile;
   const lastTokens = [...data.messages].reverse().find((m) => m.prompt_tokens)?.prompt_tokens;
 
   return (
     <div className={`flex h-full flex-col ${readingSerif ? 'reading-serif' : ''}`}>
       <header className="flex items-center gap-3 border-b border-line bg-bg/80 px-4 py-3 backdrop-blur md:px-8">
-        <Avatar name={data.character_name} color={data.avatar_color} size={40} />
+        <Avatar name={data.character_name} color={data.avatar_color} src={data.avatar_url} size={40} />
         <div className="min-w-0 flex-1">
           <h1 className="truncate font-serif text-lg font-semibold">{data.character_name}</h1>
           <p className="truncate text-xs text-muted">
             {profile ? `${t.chat.model}：${profile.model}` : data.title}
-            {lastTokens ? ` · ${t.chat.tokens(lastTokens)}` : ''}
+            {lastTokens && !data.last_prompt ? ` · ${t.chat.tokens(lastTokens)}` : ''}
           </p>
         </div>
+        {data.last_prompt && <PromptBudget info={data.last_prompt} />}
         <Button
           variant="quiet"
           className={`min-h-9 px-3 ${readingSerif ? 'text-accent' : ''}`}
@@ -85,6 +87,7 @@ export function ChatPage() {
               status={m.status}
               characterName={data.character_name}
               avatarColor={data.avatar_color}
+              avatarUrl={data.avatar_url}
             />
           ))}
           {stream.streamingText !== null && (
@@ -93,6 +96,7 @@ export function ChatPage() {
               content={stream.streamingText}
               characterName={data.character_name}
               avatarColor={data.avatar_color}
+              avatarUrl={data.avatar_url}
               streaming
             />
           )}

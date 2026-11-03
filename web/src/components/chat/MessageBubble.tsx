@@ -9,11 +9,12 @@ interface Props {
   content: string;
   characterName: string;
   avatarColor: string;
+  avatarUrl?: string | null;
   status?: MessageRecord['status'];
   streaming?: boolean;
 }
 
-export function MessageBubble({ role, content, characterName, avatarColor, status = 'complete', streaming }: Props) {
+export function MessageBubble({ role, content, characterName, avatarColor, avatarUrl, status = 'complete', streaming }: Props) {
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
@@ -40,7 +41,7 @@ export function MessageBubble({ role, content, characterName, avatarColor, statu
 
   return (
     <div className="rise group flex gap-4">
-      <Avatar name={characterName} color={avatarColor} size={36} />
+      <Avatar name={characterName} color={avatarColor} src={avatarUrl} size={36} />
       <div className="min-w-0 flex-1">
         <div className="mb-1 flex items-center gap-2 text-sm">
           <span className="font-medium">{characterName}</span>
