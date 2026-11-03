@@ -100,4 +100,9 @@ describe('assemblePrompt', () => {
     );
     expect(messages.some((m) => m.content === 'Hi Kai, I am Nova')).toBe(true);
   });
+
+  it('substitutes variables in the latest user message', () => {
+    const { messages } = assemblePrompt(baseInput({ latestUser: 'Hello {{char}}, it is {{user}}' }));
+    expect(messages.at(-2)!.content).toBe('Hello Nova, it is Kai');
+  });
 });

@@ -69,7 +69,7 @@ export function assemblePrompt(input: AssembleInput): AssembleResult {
   const systemMsg: ChatMessage = { role: 'system', content: systemText };
 
   // ---- Layer 5 & 6: latest user + post-history (must keep) ----
-  const latestMsg: ChatMessage = { role: 'user', content: input.latestUser };
+  const latestMsg: ChatMessage = { role: 'user', content: sub(input.latestUser) };
   const postText = sub(card.post_history_instructions).trim();
   const postMsg: ChatMessage | null = postText ? { role: 'system', content: postText } : null;
 
