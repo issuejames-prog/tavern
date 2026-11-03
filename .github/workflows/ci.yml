@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Test
+        run: npm test
+      - name: Build web
+        run: npm run build
+      - name: Migrations match schema
+        run: |
+          npm run db:generate
+          git status --porcelain server/src/db/migrations
+          test -z "$(git status --porcelain server/src/db/migrations)" || (echo "::error::Schema changed without a migration. Run npm run db:generate and commit." && exit 1)

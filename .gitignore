@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+data/*
+!data/.gitkeep
+*.sqlite
+*.sqlite-*
+*.log
+.DS_Store
+coverage/
+dist-demo/

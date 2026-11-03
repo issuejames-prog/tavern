@@ -1,0 +1,28 @@
+name: Generate DB migrations
+
+# Manual helper: runs drizzle-kit and commits the generated migration files.
+# Normally you run `npm run db:generate` locally instead.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npm run db:generate
+      - name: Commit migrations
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add server/src/db/migrations
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "chore: generate database migrations"
+          git push

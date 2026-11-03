@@ -1,0 +1,88 @@
+/*
+ * Design tokens — the only place colors live (CLAUDE.md §5).
+ * Mood: a quiet tavern corner in late afternoon — oat paper, warm ink, one sage accent.
+ */
+:root {
+  --bg: #f5efe4;
+  --bg-soft: #efe7d9;
+  --surface: #fbf8f2;
+  --surface-2: #f0e8da;
+  --border: #e2d8c6;
+  --text: #3a352e;
+  --text-muted: #857b6c;
+  --accent: #6b8c67;
+  --accent-hover: #5c7b58;
+  --accent-contrast: #fbf8f2;
+  --accent-soft: rgb(107 140 103 / 0.14);
+  --danger: #b0553e;
+  --danger-soft: rgb(176 85 62 / 0.1);
+  --glow: rgb(236 196 135 / 0.28);
+  --focus: rgb(107 140 103 / 0.45);
+
+  --avatar-sage: #b5c7ab;
+  --avatar-clay: #e0b499;
+  --avatar-sky: #b3c7d6;
+  --avatar-sand: #e1d1a7;
+  --avatar-plum: #cdb4c9;
+  --avatar-ink: #3a352e;
+
+  --font-body: 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', system-ui, sans-serif;
+  --font-reading: 'Noto Serif TC', 'Songti TC', 'PMingLiU', 'MingLiU', serif;
+  --radius: 8px;
+  --ease: cubic-bezier(0.25, 0.8, 0.3, 1);
+
+  color-scheme: light;
+}
+
+/* Dark: the same room after the lamps are lit. */
+:root[data-theme='dark'] {
+  --bg: #1e1b18;
+  --bg-soft: #191714;
+  --surface: #262320;
+  --surface-2: #2f2a25;
+  --border: #3a342d;
+  --text: #ebe4d7;
+  --text-muted: #a2988a;
+  --accent: #9dbc96;
+  --accent-hover: #b0cba9;
+  --accent-contrast: #1e1b18;
+  --accent-soft: rgb(157 188 150 / 0.14);
+  --danger: #e38d74;
+  --danger-soft: rgb(227 141 116 / 0.12);
+  --glow: rgb(214 160 92 / 0.08);
+  --focus: rgb(157 188 150 / 0.45);
+  --avatar-sage: #8ea385;
+  --avatar-clay: #c39a80;
+  --avatar-sky: #92a8b8;
+  --avatar-sand: #c4b48a;
+  --avatar-plum: #ae96ab;
+  --avatar-ink: #1e1b18;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #1e1b18;
+    --bg-soft: #191714;
+    --surface: #262320;
+    --surface-2: #2f2a25;
+    --border: #3a342d;
+    --text: #ebe4d7;
+    --text-muted: #a2988a;
+    --accent: #9dbc96;
+    --accent-hover: #b0cba9;
+    --accent-contrast: #1e1b18;
+    --accent-soft: rgb(157 188 150 / 0.14);
+    --danger: #e38d74;
+    --danger-soft: rgb(227 141 116 / 0.12);
+    --glow: rgb(214 160 92 / 0.08);
+    --focus: rgb(157 188 150 / 0.45);
+    --avatar-sage: #8ea385;
+    --avatar-clay: #c39a80;
+    --avatar-sky: #92a8b8;
+    --avatar-sand: #c4b48a;
+    --avatar-plum: #ae96ab;
+    --avatar-ink: #1e1b18;
+    color-scheme: dark;
+  }
+}
